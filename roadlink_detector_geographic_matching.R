@@ -233,7 +233,6 @@ leaflet() %>%
 # use ggmap for ggplot style map
 # center = c(lon = mean(st_coordinates(sidefire_inTaz_2025)[,1]), lat = mean(st_coordinates(sidefire_inTaz_2025)[,2]))
 # Get OSM basemap
-# register_google(key = 'AIzaSyC9aOym9ABm41MFrlKSozxrEm6g3eyTFOs')
 # map <- get_map(location = center, zoom = 15, source = "google")
 # Plot using ggmap and ggplot2
 # ggmap(map) +
