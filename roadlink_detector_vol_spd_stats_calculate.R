@@ -220,6 +220,5 @@ for (i in 1:nrow(sidefire_vol_spd_2022_pm)) {
   sidefire_vol_spd_2022_pm$spdmax[i] = spdarray_i[maxIndex]
 }
 
-rm(i, skipflag, spd_lowerff, spdarray_i, volarray_i,link_i)
-rm(minIndex,maxIndex,q15Index,q25Index,q50Index,q75Index,q90Index,q99Index,q975Index,spd_lowerff,spdarray_i,volarray_i)
-rm(avgIndex,i,q85Index,q95Index)
+rm(i,spd_lowerff,spdarray_i,volarray_i,link_i,
+   minIndex,maxIndex,q15Index,q25Index,q50Index,q75Index,q90Index,q99Index,q975Index,avgIndex,q85Index,q95Index)
