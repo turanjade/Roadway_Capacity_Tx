@@ -160,9 +160,10 @@ rm(within_matrix, any_inside, i, NB_match, SB_match, WB_match, EB_match, distanc
 rm(inside)
 rm(nearline, points_inside)
 
+library('openxlsx')
 
 # check the consistency with Francisco
-sidefire_2025_Frcsc = read.csv('~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/ClosestLinksToSidefires_FromFrancisco.csv', header = T)
+sidefire_2025_Frcsc = read.xlsx('~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/ClosestLinksToSidefires_FromFrancisco.xlsx', sheet = 'FromFrancisco_updated0423')
 sidefire_2025_Frcsc$consistency = 0
 for (i in 1:nrow(sidefire_2025_Frcsc)) {
   if (length(which(sidefire_inTaz_2025$ID == sidefire_2025_Frcsc$Sidefire_ID[i])) > 0) {
@@ -201,8 +202,19 @@ for (i in 1:nrow(sidefire_2025)) {
 }
 sensors_exclude_frcsc = sidefire_2025[which(sidefire_2025$frcsc_exclude == 1),]
 
-write.csv(sensors_exclude_frcsc, '~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/sidefire_2025_excludedbyFrancisco.csv', row.names = F)
-write.csv(sensors_exclude_rtu, '~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/sidefire_2025_excludedbyRTu.csv', row.names = F)
+# Create a workbook
+wb <- createWorkbook()
+
+# Add worksheets
+addWorksheet(wb, "excludeby_Francisco")
+addWorksheet(wb, "excludeby_Rtu")
+
+# Write data to each sheet
+writeData(wb, sheet = "excludeby_Francisco", x = sensors_exclude_frcsc)
+writeData(wb, sheet = "excludeby_Rtu", x = sensors_exclude_rtu)
+
+# Save workbook
+saveWorkbook(wb, file = "~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/SensorsExclude_updated0423.xlsx", overwrite = TRUE)
 
 # plot matched sidefire detectors
 library('ggplot2')
