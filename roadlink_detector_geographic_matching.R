@@ -151,6 +151,12 @@ rm(inside)
 rm(nearline, points_inside)
 
 
+####################################################################comment out session###########################################
+####################################################################comment out session###########################################
+####################################################################comment out session###########################################
+####################################################################comment out session###########################################
+####################################################################comment out session###########################################
+
 # check the consistency with Francisco
 sidefire_2025_Frcsc = read.xlsx('~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/ClosestLinksToSidefires_FromFrancisco.xlsx', sheet = 'FromFrancisco_updated0423')
 sidefire_2025_Frcsc$consistency = 0
@@ -205,42 +211,8 @@ writeData(wb, sheet = "excludeby_Rtu", x = sensors_exclude_rtu)
 # Save workbook
 saveWorkbook(wb, file = "~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/SensorsExclude_updated0423.xlsx", overwrite = TRUE)
 
-# plot matched sidefire detectors
-library('ggplot2')
-library('ggmap')
-library('tmap')
-library('osmdata')
-
-# use 'tmap' for interactive map
-# Get OSM background tiles
-tmap_mode("view")  # for interactive; use "plot" for static
-
-tm_basemap("OpenStreetMap") +
-  tm_shape(taz_2026) + tm_polygons(fill = "blue", fill_alpha = 0.4) +
-  tm_shape(roadlink_2026) + tm_lines(col = "grey", lwd = 1) +
-  tm_shape(sidefire_inTaz_2025) + tm_dots(col = "red", size = 1.5)
-
-# use leaflet
-install.packages('leaflet')
-library('leaflet')
-library('sf')
-
-leaflet() %>%
-  addTiles() %>%
-  addPolygons(data = st_transform(taz_2026, crs = 4326), color = 'blue', fillOpacity = 0.3, weight = 0.2) %>%
-  addPolylines(data = st_transform(roadlink_2026, crs = 4326), color = "grey", weight = 1.5) %>%
-  addCircleMarkers(data = st_transform(sidefire_inTaz_2025, crs = 4326), color = "red", radius = 1.5)
-
-# use ggmap for ggplot style map
-# center = c(lon = mean(st_coordinates(sidefire_inTaz_2025)[,1]), lat = mean(st_coordinates(sidefire_inTaz_2025)[,2]))
-# Get OSM basemap
-# map <- get_map(location = center, zoom = 15, source = "google")
-# Plot using ggmap and ggplot2
-# ggmap(map) +
-#   geom_polygon(data = taz_2026, aes(x = lon, y = lat),
-#                fill = "blue", alpha = 0.3, color = "blue") +
-#    geom_path(data = roadlink_2026, aes(x = lon, y = lat),
-#             color = "green", linewidth = 1.5) +
-#   geom_point(data = sidefire_inTaz_2025, aes(x = lon, y = lat),
-#             color = "red", size = 3)
-
+####################################################################comment out session###########################################
+####################################################################comment out session###########################################
+####################################################################comment out session###########################################
+####################################################################comment out session###########################################
+####################################################################comment out session###########################################
