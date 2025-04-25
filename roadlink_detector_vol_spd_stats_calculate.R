@@ -7,6 +7,9 @@ setwd("C:\\Users\\rtu\\OneDrive - The North Central Texas Council of Governments
 
 # vol_per_day_2022 = read.csv('20250410_capacity_recalculation/Database/vol_per_day_2022.csv', header = T)
 # vol_per_day_2022 = vol_per_day_2022[which(vol_per_day_2022$Year == 2022),] # only Y2022 records selected
+
+# in vol_per_day_2022, the data is 
+
 # aggregate linkID in the detector file. Each row represents the count statistics (min, 15%, Q1 (25%), mean, 50%, Q3 (75%), 85%, 90%, 95%, 97.5%, 98%, 99%, max) & its corresponding at peak hours
 
 # function: return NA stats if all values of an array is NA
@@ -110,6 +113,8 @@ for (i in 1:nrow(sidefire_vol_spd_2022_am)) {
   sidefire_vol_spd_2022_am$vol85[i] = quantile(volarray_i, na.rm = T, 0.85); q85Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol85[i])[1]
   sidefire_vol_spd_2022_am$vol90[i] = quantile(volarray_i, na.rm = T, 0.90); q90Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol90[i])[1]
   sidefire_vol_spd_2022_am$vol95[i] = quantile(volarray_i, na.rm = T, 0.95); q95Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol95[i])[1]
+  sidefire_vol_spd_2022_am$voltopoutlier[i] = sidefire_vol_spd_2022_am$vol75[i] + 1.5*(sidefire_vol_spd_2022_am$vol75[i] - sidefire_vol_spd_2022_am$vol25[i])
+  qTOIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$voloutlier[i])[1]
   sidefire_vol_spd_2022_am$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol975[i])[1]
   sidefire_vol_spd_2022_am$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol99[i])[1]
   sidefire_vol_spd_2022_am$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volmax[i])[1]
@@ -124,6 +129,7 @@ for (i in 1:nrow(sidefire_vol_spd_2022_am)) {
   sidefire_vol_spd_2022_am$spd85[i] = spdarray_i[q85Index]
   sidefire_vol_spd_2022_am$spd90[i] = spdarray_i[q90Index]
   sidefire_vol_spd_2022_am$spd95[i] = spdarray_i[q95Index]
+  sidefire_vol_spd_2022_am$spdtopoutlier[i] = spdarray_i[qTOIndex]
   sidefire_vol_spd_2022_am$spd975[i] = spdarray_i[q975Index]
   sidefire_vol_spd_2022_am$spd99[i] = spdarray_i[q99Index]
   sidefire_vol_spd_2022_am$spdmax[i] = spdarray_i[maxIndex]
