@@ -286,8 +286,6 @@ rm(mymap)
 ########################################### map PM #############################################
 ########################################### map PM #############################################
 ########################################### map PM #############################################
-
-# plot has bug - needs to join sidefire shape with sidefire vol spd
 sidefire_vol_spd_2022_pm_filter$ID_detector = as.numeric(sidefire_vol_spd_2022_pm_filter$ID_detector)
 sidefire_inTaz_2025_pm = left_join(sidefire_inTaz_2025, sidefire_vol_spd_2022_pm_filter,
                                    by = c('ID' = 'ID_detector'))
@@ -331,54 +329,48 @@ saveWidget(mymap, file = "20250410_capacity_recalculation/RoadNetwork_2026/Data_
 rm(mymap)
 
 
-
 ########################################### box & map OP #############################################
 ########################################### box & map OP #############################################
 ########################################### box & map OP #############################################
 ########################################### box & map OP #############################################
+sidefire_vol_spd_2022_op_filter$ID_detector = as.numeric(sidefire_vol_spd_2022_op_filter$ID_detector)
+sidefire_inTaz_2025_op = left_join(sidefire_inTaz_2025, sidefire_vol_spd_2022_op_filter,
+                                   by = c('ID' = 'ID_detector'))
+sidefire_inTaz_2025_op = sidefire_inTaz_2025_op[which(!is.na(sidefire_inTaz_2025_op$volmin)),]
 
-# boxupper volume distribution by weaving types
-ggplot(sidefire_vol_spd_2022_op_filter[which(sidefire_vol_spd_2022_op_filter$FUNCL == 1),], 
-       aes(x = factor(weavetype, levels = c('FRWY_BASIC','BASIC','MD','A','B','C','LBS','LBE')), 
-           y = volboxupper/oplane)) + geom_boxplot(fill = 'yellow') + 
-  labs(title = 'Max Volume for different freeway weaving types') +
-  scale_x_discrete(name = "Freeway Weaving Type") + scale_y_continuous(name = "Max Volume at speed < ff_speed") + 
-  theme(axis.text.x = element_text(size = 12),axis.text.y = element_text(size = 12),
-        axis.title.x = element_text(size = 14),axis.title.y = element_text(size = 14),
-        plot.title = element_text(face = 'bold', size = 15))
+sidefire_inTaz_2025_op$popup <- paste0(
+  "<b>Sensor ID:</b> ", sidefire_inTaz_2025_op$ID, "<br>",
+  "<b>Street Name:</b> ", sidefire_inTaz_2025_op$LINKNAME, "<br>",
+  "<b>FUNCL:</b> ", sidefire_inTaz_2025_op$FUNCL, "<br>",
+  "<b>Lane:</b> ", sidefire_inTaz_2025_op$oplane, "<br>",
+  "<b>Vol 95%:</b> ", round(sidefire_inTaz_2025_op$volboxupper/sidefire_inTaz_2025_op$oplane,0), "<br>",
+  "<b>Speed 95%:</b> ", sidefire_inTaz_2025_op$spdboxupper, "<br>")
 
-# corresponding speed distribution at 95% volume
-ggplot(sidefire_vol_spd_2022_op_filter[which(sidefire_vol_spd_2022_op_filter$FUNCL == 1),], 
-       aes(x = factor(weavetype, levels = c('FRWY_BASIC','BASIC','MD','A','B','C','LBS','LBE')), 
-           y = spdboxupper)) + geom_boxplot(fill = 'yellow') + 
-  labs(title = 'Corresponding speed distribution of max volume records for different freeway weaving types') +
-  scale_x_discrete(name = "Freeway Weaving Type") + scale_y_continuous(name = "Speed at max volume (MPH)") + 
-  theme(axis.text.x = element_text(size = 12),axis.text.y = element_text(size = 12),
-        axis.title.x = element_text(size = 14),axis.title.y = element_text(size = 14),
-        plot.title = element_text(face = 'bold', size = 15))
-
-# plot has bug - needs to join sidefire shape with sidefire vol spd
-sidefire_inTaz_2025$popup <- paste0(
-  "<b>Sensor ID:</b> ", sidefire_inTaz_2025$ID, "<br>",
-  "<b>Street Name:</b> ", sidefire_inTaz_2025$LINKNAME, "<br>",
-  "<b>FUNCL:</b> ", sidefire_inTaz_2025$FUNCL, "<br>",
-  "<b>Lane:</b> ", sidefire_vol_spd_2022_op_filter$oplane, "<br>",
-  "<b>Vol 95%:</b> ", round(sidefire_vol_spd_2022_op_filter$vol95/sidefire_vol_spd_2022_op_filter$oplane,0), "<br>",
-  "<b>Speed 95%:</b> ", sidefire_vol_spd_2022_op_filter$spd95, "<br>")
-
-# Define a color palette
+# Define a color palette for volume
 pal <- colorBin(palette = colorRampPalette(c("red", "yellow", "green"))(5), 
-                domain = sidefire_vol_spd_2022_op_filter$vol95/sidefire_vol_spd_2022_op_filter$oplane, bins = 5)
-
-leaflet() %>%
+                domain = sidefire_inTaz_2025_op$volboxupper/sidefire_inTaz_2025_op$oplane, bins = 5)
+mymap = 
+  leaflet() %>%
   addTiles() %>%
-  # addPolygons(data = st_transform(taz_2026, crs = 4326), color = 'blue', fillOpacity = 0.3, weight = 0.2) %>%
-  #addPolylines(data = st_transform(roadlink_2026[which(roadlink_2026$FUNCL == 1 | roadlink_2026$FUNCL ==6),], crs = 4326), color = "red", weight = 1.5) %>%
-  addCircleMarkers(data = st_transform(sidefire_inTaz_2025, crs = 4326), fillOpacity = 1,
-                   color = ~pal(round(sidefire_vol_spd_2022_op_filter$vol95/sidefire_vol_spd_2022_op_filter$oplane,0)), 
-                   label = ~paste("Value:", round(sidefire_vol_spd_2022_op_filter$vol95/sidefire_vol_spd_2022_op_filter$oplane,0)),
+  addCircleMarkers(data = st_transform(sidefire_inTaz_2025_op, crs = 4326), fillOpacity = 1,
+                   color = ~pal(round(sidefire_inTaz_2025_op$volboxupper/sidefire_inTaz_2025_op$oplane,0)), 
+                   label = ~paste("Value:", round(sidefire_inTaz_2025_op$volboxupper/sidefire_inTaz_2025_op$oplane,0)),
                    radius = 5, popup = ~popup) %>%
-  addLegend("bottomright", pal = pal, values = round(sidefire_vol_spd_2022_op_filter$vol95/sidefire_vol_spd_2022_op_filter$oplane,0),
-            title = "95% volume when speed < ff_speed", opacity = 1)
-
-
+  addLegend("bottomright", pal = pal, values = round(sidefire_inTaz_2025_op$volboxupper/sidefire_inTaz_2025_op$oplane,0),
+            title = "op, Max volume when speed < ff_speed", opacity = 1)
+saveWidget(mymap, file = "20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/vol_op_boxupper.html", selfcontained = TRUE)
+rm(mymap)
+# Define a color palette for speed
+pal <- colorBin(palette = colorRampPalette(c("red", "yellow", "green"))(5), 
+                domain = sidefire_inTaz_2025_op$spdboxupper, bins = 5)
+mymap = 
+  leaflet() %>%
+  addTiles() %>%
+  addCircleMarkers(data = st_transform(sidefire_inTaz_2025_op, crs = 4326), fillOpacity = 1,
+                   color = ~pal(sidefire_inTaz_2025_op$spdboxupper), 
+                   label = ~paste("Value:", round(sidefire_inTaz_2025_op$spdboxupper,2)),
+                   radius = 5, popup = ~popup) %>%
+  addLegend("bottomright", pal = pal, values = round(sidefire_inTaz_2025_op$spdboxupper,2),
+            title = "op, Max volume when speed < ff_speed", opacity = 1)
+saveWidget(mymap, file = "20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/spd_op_boxupper.html", selfcontained = TRUE)
+rm(mymap)
