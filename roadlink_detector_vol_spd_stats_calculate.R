@@ -119,8 +119,8 @@ for (i in 1:nrow(sidefire_vol_spd_2022_am)) {
   sidefire_vol_spd_2022_am$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol975[i])[1]
   sidefire_vol_spd_2022_am$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol99[i])[1]
   sidefire_vol_spd_2022_am$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volmax[i])[1]
-  sidefire_vol_spd_2022_am$volboxupper[i] = sidefire_vol_spd_2022_am$vol75[i] + 
-    1.5*(sidefire_vol_spd_2022_am$vol75[i] - sidefire_vol_spd_2022_am$vol25[i])
+  sidefire_vol_spd_2022_am$volboxupper[i] = min(sidefire_vol_spd_2022_am$vol75[i] + 
+    1.5*(sidefire_vol_spd_2022_am$vol75[i] - sidefire_vol_spd_2022_am$vol25[i]), sidefire_vol_spd_2022_am$volmax[i])
   boxupperIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volboxupper[i])[1]
   
   # speed stats from sidefire detector, vol_per_day which takes records per 15-minute interval
@@ -216,8 +216,8 @@ for (i in 1:nrow(sidefire_vol_spd_2022_pm)) {
   sidefire_vol_spd_2022_pm$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol975[i])[1]
   sidefire_vol_spd_2022_pm$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol99[i])[1]
   sidefire_vol_spd_2022_pm$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volmax[i])[1]
-  sidefire_vol_spd_2022_pm$volboxupper[i] = sidefire_vol_spd_2022_pm$vol75[i] + 
-    1.5*(sidefire_vol_spd_2022_pm$vol75[i] - sidefire_vol_spd_2022_pm$vol25[i])
+  sidefire_vol_spd_2022_pm$volboxupper[i] = min(sidefire_vol_spd_2022_pm$vol75[i] + 
+    1.5*(sidefire_vol_spd_2022_pm$vol75[i] - sidefire_vol_spd_2022_pm$vol25[i]), sidefire_vol_spd_2022_pm$volmax[i])
   boxupperIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volboxupper[i])[1]
   
   # speed stats from sidefire detector, vol_per_day which takes records per 15-minute interval
@@ -319,8 +319,8 @@ for (i in 1:nrow(sidefire_vol_spd_2022_op)) {
   sidefire_vol_spd_2022_op$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol975[i])[1]
   sidefire_vol_spd_2022_op$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol99[i])[1]
   sidefire_vol_spd_2022_op$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volmax[i])[1]
-  sidefire_vol_spd_2022_op$volboxupper[i] = sidefire_vol_spd_2022_op$vol75[i] + 
-    1.5*(sidefire_vol_spd_2022_op$vol75[i] - sidefire_vol_spd_2022_op$vol25[i])
+  sidefire_vol_spd_2022_op$volboxupper[i] = min(sidefire_vol_spd_2022_op$vol75[i] + 
+    1.5*(sidefire_vol_spd_2022_op$vol75[i] - sidefire_vol_spd_2022_op$vol25[i]), sidefire_vol_spd_2022_op$volmax[i])
   boxupperIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volboxupper[i])[1]
   
   # speed stats from sidefire detector, vol_per_day which takes records per 15-minute interval
