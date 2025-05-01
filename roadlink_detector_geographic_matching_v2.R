@@ -1,0 +1,110 @@
+## updates in v2: 
+## 1) select all the links that are within 100 ft of each sensor, and find the best match among them.
+###  if several best matches found, save the link and check manually (possibly see if there is a method for automatic process)
+## 2) delete FUNCL criterion because it is tagged with RDWY, not initially provided by sidefire (same as DIR. Use name to match direction instead)
+## 3) Only look at freeway. In this version, we still use FUNCL in sidefire for simplicity. Need to transfer to name match
+
+
+library('arcgisbinding')
+library('sf')
+library('dplyr')
+library('openxlsx')
+
+
+setwd("C:\\Users\\rtu\\OneDrive - The North Central Texas Council of Governments\\Documents\\0_ModelDataDevelopment")
+
+sidefire2025 = st_read('20250410_capacity_recalculation\\RoadNetwork_2026\\ArcGIS\\Sidefire_2025\\sidefire_2025.shp')
+roadlink_2026 = st_read('20250410_capacity_recalculation\\RoadNetwork_2026\\ArcGIS\\RDWY\\road_shp_addedinfo.shp')
+taz_2026 = st_read('20250410_capacity_recalculation\\RoadNetwork_2026\\ArcGIS\\TAZ\\taz_shp.shp')
+
+sidefire_2025 <- sidefire2025 %>%
+  select(ID, LINKNAME, FUNCL, DIR, geometry)
+colnames(sidefire_2025) = c('ID', 'LINKNAME', 'FUNCL', 'DIR', 'geometry')
+
+# st_crs(sidefire_2025) == st_crs(roadlink_2026)  # should be TRUE, check if two layers are in the same coordinate
+# st_crs(sidefire_2025) == st_crs(taz_2026) # should be TRUE, check if two layers are in the same coordinate
+
+############################################# Geographic match #############################################
+############################################# Geographic match #############################################
+############################################# Geographic match #############################################
+############################################# Geographic match #############################################
+# note: process
+############################################# intersect point buffer (100ft) with links to find links within 100ft of each detector ######################
+############################################# intersect point buffer (100ft) with links to find links within 100ft of each detector ######################
+
+# Ensure both are in the same projected CRS (must use feet as unit!)
+# For example, NAD 1983 StatePlane Arizona East FIPS 0201 Feet
+# Replace with your actual CRS
+crs_feet <- 2223  # example EPSG code for feet
+lines <- st_transform(roadlink_2026, crs_feet)
+points <- st_transform(sidefire_2025, crs_feet)
+
+# Buffer points by 100 feet
+points_buffer <- st_buffer(points, dist = 100)
+
+# Spatial join: get all lines within 100 ft of any point
+# This creates a row for each line-point pair
+lines_within_100ft <- st_join(lines, points_buffer, join = st_intersects, left = FALSE)
+
+############################################# Option 1: Find FUNCL = 1 ##########################################
+############################################# Option 1: Find FUNCL = 1 ##########################################
+# option 2 is to use street name. First use FUNCL 
+sidefire_2025_frwy = sidefire_2025[which(sidefire_2025$FUNCL == 1),]
+lines_within_100ft_frwy = lines_within_100ft[which(lines_within_100ft$FUNCL.x == 1 & # type freeway in rdwy
+                                                     !is.na(lines_within_100ft$ID.y) & # there is point matched for each link
+                                                     lines_within_100ft$FUNCL.y == 1),] # type freeway in sidefire
+# for each sidefire ID that is tagged as FUNCL 1, find the best match from the 
+sidefire_ID = unique(sidefire_2025_frwy$ID)
+sidefire_linkmatch_frwy_2025 = data.frame(matrix(0, nrow = 0, ncol = 5))
+# colnames(sidefire_linkmatch_frwy_2025) = c('sf_id','sf_name','rdwy_id','rdwy_name','distance')
+for (i in 1:length(sidefire_ID)) {
+  link_i = lines_within_100ft_frwy[which(lines_within_100ft_frwy$ID.y == sidefire_ID[i]),]
+  if (nrow(link_i) == 0) {
+    print(paste('sidefire sensor', sidefire_ID[i],'cannot find matched link within 100ft buffer'))
+    next
+  }
+  for (j in 1:nrow(link_i)) {
+    #initiate dir and name decision factor as 0. If it becomes 1 after the check, then it passes
+    dir_j = 0; name_j = 0 
+    ############################################# check dir by street name & sidefire name ##########################################
+    if (isTRUE(grepl('NB', link_i$LINKNAME[j])) & isTRUE(grepl('NB', link_i$STREET[j])) | 
+        isTRUE(grepl('SB', link_i$LINKNAME[j])) & isTRUE(grepl('SB', link_i$STREET[j])) | 
+        isTRUE(grepl('WB', link_i$LINKNAME[j])) & isTRUE(grepl('WB', link_i$STREET[j])) | 
+        isTRUE(grepl('EB', link_i$LINKNAME[j])) & isTRUE(grepl('EB', link_i$STREET[j]))) {
+      dir_j = 1 # pass dir check
+    }
+    ############################################# check check strict street name ##########################################
+    if (strsplit(link_i$LINKNAME[j],"[-. ]+")[[1]][1] == strsplit(link_i$STREET[j], '[-. ]+')[[1]][1]) {
+      name_j = 1
+    }
+    if (dir_j == 1 & name_j == 1) {
+      distance_ij = st_length(st_nearest_points(points[which(points$ID == sidefire_ID[i]),], 
+                                                lines[which(lines$ID == link_i$ID.x[j]),])) # calculate as meters
+      rowtocombine = c(link_i$ID.y[j], link_i$LINKNAME[j], link_i$ID.x[j], link_i$STREET[j], distance_ij)
+      sidefire_linkmatch_frwy_2025 = rbind(sidefire_linkmatch_frwy_2025, rowtocombine)
+    }
+  }
+}
+colnames(sidefire_linkmatch_frwy_2025) = c('sf_id','sf_name','rdwy_id','rdwy_name','distance')
+
+############################################# find duplicated match, manual check ##########################################
+sidefire_linkmatch_frwy_2025_dup <- sidefire_linkmatch_frwy_2025 %>%
+  group_by(sf_id) %>%
+  filter(n() > 1) %>%
+  ungroup()
+
+write.csv(sidefire_linkmatch_frwy_2025_dup, 
+          paste('~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/',
+                'sidefire_linkmatch_frwy_2025_v2_duplinks.csv', sep = ''), row.names = F)
+
+##### Possibilities after manual check:
+## 1) more than two links within 100 ft, in the same direction (two consecutive links), are matched to one sidefire
+##    solution: choose the closest one
+## 2) 
+
+
+
+############################################# clean out working environment ##########################################
+
+rm(link_i, lines_within_100ft, lines_within_100ft_frwy, points_buffer, lines, points,
+   crs_feet, dir_j, distance_ij, name_j, rowtocombine, sidefire_ID, i, j)
