@@ -155,7 +155,6 @@ rm(within_matrix, any_inside, i, NB_match, SB_match, WB_match, EB_match, distanc
 rm(inside)
 rm(nearline, points_inside)
 
-
 ####################################################################check removed ramp###########################################
 ####################################################################check removed ramp###########################################
 ####################################################################check removed ramp###########################################
@@ -175,11 +174,20 @@ ramp_to_addback = ramp_to_addback[which(ramp_to_addback$add_back == 1),]
 # first store initial colnames of the processed selected TAZ
 colname = colnames(sidefire_notmatch_ramp)
 # from deleted shapefile rows, find the ramp that should not be deleted and add back to sidefire set
+# before that, check if sidefire_inTAZ_2025 colname consistent with sidefire_notmatch_ramp
+# names(sidefire_inTaz_2025); names(sidefire_notmatch_ramp)
+# sidefire_inTaz_2025 = sidefire_inTaz_2025[,-18]
 for (i in 1:nrow(ramp_to_addback)) {
   addedramp = sidefire_notmatch_ramp[which(sidefire_notmatch_ramp$ID == ramp_to_addback$ID[i]),]
   sidefire_inTaz_2025 = rbind(sidefire_inTaz_2025, addedramp)
 }
 colnames(sidefire_inTaz_2025) = colname
+
+
+## save matched results
+write.csv(sidefire_inTaz_2025, '~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/Sidefire_2025_strictmatch_0430.csv',
+          row.names = F, col.names = T)
+
 
 ####################################################################check consistency with Francisco###########################################
 ####################################################################check consistency with Francisco###########################################
