@@ -5,8 +5,8 @@ library('dplyr')
 
 setwd("C:\\Users\\rtu\\OneDrive - The North Central Texas Council of Governments\\Documents\\0_ModelDataDevelopment")
 
-vol_per_day_2022 = read.csv('20250410_capacity_recalculation/Database/vol_per_day_2022.csv', header = T)
-vol_per_day_2022 = vol_per_day_2022[which(vol_per_day_2022$Year == 2022),] # only Y2022 records selected
+# vol_per_day_2022 = read.csv('20250410_capacity_recalculation/Database/vol_per_day_2022.csv', header = T)
+# vol_per_day_2022 = vol_per_day_2022[which(vol_per_day_2022$Year == 2022),] # only Y2022 records selected
 
 # in vol_per_day_2022, the data is hourly records. for example, volume_0_00 means the count from 12am to 1am, volume_0_15 means the count from 12:15am to 1:15am; the same for speed
 
