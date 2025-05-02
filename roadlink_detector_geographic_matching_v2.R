@@ -97,10 +97,48 @@ write.csv(sidefire_linkmatch_frwy_2025_dup,
           paste('~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/',
                 'sidefire_linkmatch_frwy_2025_v2_duplinks.csv', sep = ''), row.names = F)
 
+
 ##### Possibilities after manual check:
 ## 1) more than two links within 100 ft, in the same direction (two consecutive links), are matched to one sidefire
 ##    solution: choose the closest one
-## 2) 
+## 2) simply delete dups
+sidefire_linkmatch_frwy_2025 = sidefire_linkmatch_frwy_2025[!duplicated(sidefire_linkmatch_frwy_2025$sf_id),]
+
+############################################# add weavetype & capacity & lanes to each matched record ##########################################
+sidefire_linkmatch_frwy_2025$weavetype = 0
+sidefire_linkmatch_frwy_2025$amhrcap = 0
+sidefire_linkmatch_frwy_2025$ophrcap = 0
+sidefire_linkmatch_frwy_2025$pmhrcap = 0
+sidefire_linkmatch_frwy_2025$amlane = 0
+sidefire_linkmatch_frwy_2025$oplane = 0
+sidefire_linkmatch_frwy_2025$pmlane = 0
+sidefire_linkmatch_frwy_2025$amffspd = 0
+sidefire_linkmatch_frwy_2025$pmffspd = 0
+sidefire_linkmatch_frwy_2025$opffspd = 0
+
+for (i in 1:nrow(sidefire_linkmatch_frwy_2025)) {
+  sidefire_linkmatch_frwy_2025$weavetype[i] = roadlink_2026$WEAVE_T[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])]
+   
+  sidefire_linkmatch_frwy_2025$amhrcap[i] = max(roadlink_2026$AMHRCAP_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                roadlink_2026$AMHRCAP_B[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  sidefire_linkmatch_frwy_2025$pmhrcap[i] = max(roadlink_2026$PMHRCAP_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                 roadlink_2026$PMHRCAP_B[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  sidefire_linkmatch_frwy_2025$ophrcap[i] = max(roadlink_2026$OPHRCAP_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                roadlink_2026$OPHRCAP_B[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  
+  sidefire_linkmatch_frwy_2025$amlane[i] = max(roadlink_2026$AMLN_AB[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                roadlink_2026$AMLN_BA[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  sidefire_linkmatch_frwy_2025$pmlane[i] = max(roadlink_2026$PMLN_AB[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                roadlink_2026$PMLN_BA[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  sidefire_linkmatch_frwy_2025$oplane[i] = max(roadlink_2026$OPLN_AB[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                roadlink_2026$OPLN_BA[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  sidefire_linkmatch_frwy_2025$amffspd[i] = max(roadlink_2026$PKFRSPD_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                 roadlink_2026$PKFRSPD_B[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  sidefire_linkmatch_frwy_2025$pmffspd[i] = max(roadlink_2026$PKFRSPD_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                 roadlink_2026$PKFRSPD_B[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  sidefire_linkmatch_frwy_2025$opffspd[i] = max(roadlink_2026$OPFRSPD_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
+                                                roadlink_2026$OPFRSPD_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+}
 
 
 
