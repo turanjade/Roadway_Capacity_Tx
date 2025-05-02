@@ -39,6 +39,118 @@ for (i in 1:nrow(sidefire_vol_spd_2022_op_filter)) {
   sidefire_vol_spd_2022_op_filter$weavetype[i] = roadlink_2026$WEAVE_T[which(roadlink_2026$ID == sidefire_vol_spd_2022_op_filter$ID_Road[i])]
 }
 
+
+
+########################################### MFD for FUNCL 1, op, pm, and am #############################################
+########################################### MFD for FUNCL 1, op, pm, and am #############################################
+########################################### MFD for FUNCL 1, op, pm, and am #############################################
+########################################### MFD for FUNCL 1, op, pm, and am #############################################
+# combine op, pm, and am
+sidefire_vol_spd_alltime = rbind(cbind(sidefire_vol_spd_2022_am_filter$ID_detector, sidefire_vol_spd_2022_am_filter$LinkName_detector,
+                                       sidefire_vol_spd_2022_am_filter$ID_Road, sidefire_vol_spd_2022_am_filter$LinkName_Road, 
+                                       sidefire_vol_spd_2022_am_filter$FUNCL, 'AM', sidefire_vol_spd_2022_am_filter$weavetype,
+                                       sidefire_vol_spd_2022_am_filter$AMlane, 
+                                       sidefire_vol_spd_2022_am_filter$volboxupper, sidefire_vol_spd_2022_am_filter$spdboxupper),
+                                 
+                                 cbind(sidefire_vol_spd_2022_pm_filter$ID_detector, sidefire_vol_spd_2022_pm_filter$LinkName_detector,
+                                       sidefire_vol_spd_2022_pm_filter$ID_Road, sidefire_vol_spd_2022_pm_filter$LinkName_Road, 
+                                       sidefire_vol_spd_2022_pm_filter$FUNCL, 'PM', sidefire_vol_spd_2022_pm_filter$weavetype,
+                                       sidefire_vol_spd_2022_pm_filter$PMlane, 
+                                       sidefire_vol_spd_2022_pm_filter$volboxupper, sidefire_vol_spd_2022_pm_filter$spdboxupper),
+                                 
+                                 cbind(sidefire_vol_spd_2022_op_filter$ID_detector, sidefire_vol_spd_2022_op_filter$LinkName_detector,
+                                       sidefire_vol_spd_2022_op_filter$ID_Road, sidefire_vol_spd_2022_op_filter$LinkName_Road, 
+                                       sidefire_vol_spd_2022_op_filter$FUNCL, 'OP', sidefire_vol_spd_2022_op_filter$weavetype,
+                                       sidefire_vol_spd_2022_op_filter$oplane, 
+                                       sidefire_vol_spd_2022_op_filter$volboxupper, sidefire_vol_spd_2022_op_filter$spdboxupper))
+
+colnames(sidefire_vol_spd_alltime) = c('ID_detector','LinkName_detector','ID_Road','LinkName_Road','FUNCL', 'Time', 'weavetype', 'lane', 'vol_max','spd_at_max')
+sidefire_vol_spd_alltime = data.frame(sidefire_vol_spd_alltime)
+
+for (i in 8:10) {
+  sidefire_vol_spd_alltime[,i] = as.numeric(sidefire_vol_spd_alltime[,i])
+}
+
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/Vol vs Spd, PK at weave type FRWY_BASIC.png", 
+    width = 800, height = 600)
+ggplot(sidefire_vol_spd_alltime[which(sidefire_vol_spd_alltime$weavetype == 'FRWY_BASIC' & 
+                                        sidefire_vol_spd_alltime$Time != 'OP'),],
+       aes(x = vol_max/lane, y = spd_at_max)) + geom_point(color = 'red') +
+  xlab('Max volume per lane per hour') + ylab('Speed at max vol (MPH)') + labs(title = 'Vol vs Spd on FRWY_BASIC') +
+  theme(axis.text.x = element_text(size = 18),axis.text.y = element_text(size = 18),
+        axis.title.x = element_text(size = 18),axis.title.y = element_text(size = 18),
+        plot.title = element_text(face = 'bold', size = 18))
+
+dev.off()
+
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/Vol vs Spd, PK at weave type BASIC.png", 
+    width = 800, height = 600)
+ggplot(sidefire_vol_spd_alltime[which(sidefire_vol_spd_alltime$weavetype == 'BASIC' & 
+                                        sidefire_vol_spd_alltime$Time != 'OP'),],
+       aes(x = vol_max/lane, y = spd_at_max)) + geom_point(color = 'red') +
+  xlab('Max volume per lane per hour') + ylab('Speed at max vol (MPH)') + labs(title = 'Vol vs Spd on BASIC') +
+  theme(axis.text.x = element_text(size = 18),axis.text.y = element_text(size = 18),
+        axis.title.x = element_text(size = 18),axis.title.y = element_text(size = 18),
+        plot.title = element_text(face = 'bold', size = 18))
+dev.off()
+
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/Vol vs Spd, PK at weave type A.png", 
+    width = 800, height = 600)
+ggplot(sidefire_vol_spd_alltime[which(sidefire_vol_spd_alltime$weavetype == 'A' & 
+                                        sidefire_vol_spd_alltime$Time != 'OP'),],
+       aes(x = vol_max/lane, y = spd_at_max)) + geom_point(color = 'red') +
+  xlab('Max volume per lane per hour') + ylab('Speed at max vol (MPH)') + labs(title = 'Vol vs Spd on Weave type A') +
+  theme(axis.text.x = element_text(size = 18),axis.text.y = element_text(size = 18),
+        axis.title.x = element_text(size = 18),axis.title.y = element_text(size = 18),
+        plot.title = element_text(face = 'bold', size = 18))
+dev.off()
+
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/Vol vs Spd, PK at weave type MD.png", 
+    width = 800, height = 600)
+ggplot(sidefire_vol_spd_alltime[which(sidefire_vol_spd_alltime$weavetype == 'MD' & 
+                                        sidefire_vol_spd_alltime$Time != 'OP'),],
+       aes(x = vol_max/lane, y = spd_at_max)) + geom_point(color = 'red') +
+  xlab('Max volume per lane per hour') + ylab('Speed at max vol (MPH)') + labs(title = 'Vol vs Spd on Weave type MD') +
+  theme(axis.text.x = element_text(size = 18),axis.text.y = element_text(size = 18),
+        axis.title.x = element_text(size = 18),axis.title.y = element_text(size = 18),
+        plot.title = element_text(face = 'bold', size = 18))
+dev.off()
+
+# no need to plot
+# weave type with less data
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/MFD, PK at weave type B.png", 
+    width = 800, height = 600)
+ggplot(sidefire_vol_spd_alltime[which(sidefire_vol_spd_alltime$weavetype == 'B' & 
+                                        sidefire_vol_spd_alltime$Time != 'OP'),],
+       aes(x = vol_max/lane, y = spd_at_max)) + geom_point(color = 'red') +
+  xlab('Max volume per lane per hour') + ylab('Speed at max vol (MPH)') + labs(title = 'Vol vs Spd on Weave type B') +
+  theme(axis.text.x = element_text(size = 18),axis.text.y = element_text(size = 18),
+        axis.title.x = element_text(size = 18),axis.title.y = element_text(size = 18),
+        plot.title = element_text(face = 'bold', size = 18))
+dev.off()
+
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/MFD, PK at weave type C.png", 
+    width = 800, height = 600)
+ggplot(sidefire_vol_spd_alltime[which(sidefire_vol_spd_alltime$weavetype == 'C' & 
+                                        sidefire_vol_spd_alltime$Time != 'OP'),],
+       aes(x = vol_max/lane, y = spd_at_max)) + geom_point(color = 'red') +
+  xlab('Max volume per lane per hour') + ylab('Speed at max vol (MPH)') + labs(title = 'Vol vs Spd on Weave type C') +
+  theme(axis.text.x = element_text(size = 18),axis.text.y = element_text(size = 18),
+        axis.title.x = element_text(size = 18),axis.title.y = element_text(size = 18),
+        plot.title = element_text(face = 'bold', size = 18))
+dev.off()
+
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/MFD, PK at weave type LBE.png", 
+    width = 800, height = 600)
+ggplot(sidefire_vol_spd_alltime[which(sidefire_vol_spd_alltime$weavetype == 'LBE' & 
+                                        sidefire_vol_spd_alltime$Time != 'OP'),],
+       aes(x = vol_max/lane, y = spd_at_max)) + geom_point(color = 'red') +
+  xlab('Max volume per lane per hour') + ylab('Speed at max vol (MPH)') + labs(title = 'Vol vs Spd on Weave type LBE') +
+  theme(axis.text.x = element_text(size = 18),axis.text.y = element_text(size = 18),
+        axis.title.x = element_text(size = 18),axis.title.y = element_text(size = 18),
+        plot.title = element_text(face = 'bold', size = 18))
+dev.off()
+
 ########################################### boxplot for FUNCL 1, op, pm, and am #############################################
 ########################################### boxplot for FUNCL 1, op, pm, and am #############################################
 ########################################### boxplot for FUNCL 1, op, pm, and am #############################################
