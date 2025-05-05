@@ -40,7 +40,7 @@ lines <- st_transform(roadlink_2026, crs_feet)
 points <- st_transform(sidefire_2025, crs_feet)
 
 # Buffer points by 100 feet
-points_buffer <- st_buffer(points, dist = 100)
+points_buffer <- st_buffer(points, dist = 100) # ease to 150? -- no, keep consistent with Francisco
 
 # Spatial join: get all lines within 100 ft of any point
 # This creates a row for each line-point pair
@@ -57,12 +57,15 @@ lines_within_100ft_frwy = lines_within_100ft[which(lines_within_100ft$FUNCL.x ==
 sidefire_ID = unique(sidefire_2025_frwy$ID)
 sidefire_linkmatch_frwy_2025 = data.frame(matrix(0, nrow = 0, ncol = 5))
 # colnames(sidefire_linkmatch_frwy_2025) = c('sf_id','sf_name','rdwy_id','rdwy_name','distance')
+# a = 0 #record how many detectors are filtered out because of the distance buffer
 for (i in 1:length(sidefire_ID)) {
   link_i = lines_within_100ft_frwy[which(lines_within_100ft_frwy$ID.y == sidefire_ID[i]),]
   if (nrow(link_i) == 0) {
     print(paste('sidefire sensor', sidefire_ID[i],'cannot find matched link within 100ft buffer'))
+#     a = a + 1
     next
   }
+  match_i = matrix(0, nrow = 0, ncol = 2)
   for (j in 1:nrow(link_i)) {
     #initiate dir and name decision factor as 0. If it becomes 1 after the check, then it passes
     dir_j = 0; name_j = 0 
@@ -77,32 +80,72 @@ for (i in 1:length(sidefire_ID)) {
     if (strsplit(link_i$LINKNAME[j],"[-. ]+")[[1]][1] == strsplit(link_i$STREET[j], '[-. ]+')[[1]][1]) {
       name_j = 1
     }
-    if (dir_j == 1 & name_j == 1) {
-      distance_ij = st_length(st_nearest_points(points[which(points$ID == sidefire_ID[i]),], 
-                                                lines[which(lines$ID == link_i$ID.x[j]),])) # calculate as meters
-      rowtocombine = c(link_i$ID.y[j], link_i$LINKNAME[j], link_i$ID.x[j], link_i$STREET[j], distance_ij)
-      sidefire_linkmatch_frwy_2025 = rbind(sidefire_linkmatch_frwy_2025, rowtocombine)
+    ############################################# check nicknames of highway ##############################################
+    #### SRT refers to Sam Rayburn tollway, SH121; PGBT refers to President George Bush Turnpike,  SH 190
+    if (strsplit(link_i$LINKNAME[j],"[-. ]+")[[1]][1] == 'SH121' & strsplit(link_i$STREET[j], '[-. ]+')[[1]][1] == 'SRT' |
+        strsplit(link_i$LINKNAME[j],"[-. ]+")[[1]][1] == 'SH190' & strsplit(link_i$STREET[j], '[-. ]+')[[1]][1] == 'PGBT') {
+      name_j = 1
     }
+    #### IH can be I
+    if (grepl("^I(?!H)",strsplit(link_i$LINKNAME[j],"[-. ]+")[[1]][1], perl = T) &
+        sub("^I([^H])", "IH\\1", strsplit(link_i$LINKNAME[j],"[-. ]+")[[1]][1]) == strsplit(link_i$STREET[j], '[-. ]+')[[1]][1]) {
+      name_j = 1
+    }
+    match_i = rbind(match_i, c(dir_j*name_j, st_length(st_nearest_points(points[which(points$ID == sidefire_ID[i]),], 
+                                                           lines[which(lines$ID == link_i$ID.x[j]),])))) # combine the distance with two criteria check
+
   }
+  choose_i = which(match_i[,1] != 0 & match_i[,2] == min(match_i[,2]))
+  rowtocombine = c(link_i$ID.y[choose_i], link_i$LINKNAME[choose_i], link_i$ID.x[choose_i], link_i$STREET[choose_i], match_i[choose_i,2])
+  sidefire_linkmatch_frwy_2025 = rbind(sidefire_linkmatch_frwy_2025, rowtocombine)
+  rm(match_i, choose_i, dir_j, name_j, rowtocombine)
 }
 colnames(sidefire_linkmatch_frwy_2025) = c('sf_id','sf_name','rdwy_id','rdwy_name','distance')
+sidefire_linkmatch_frwy_2025$distance = as.numeric(sidefire_linkmatch_frwy_2025$distance)
 
-############################################# find duplicated match, manual check ##########################################
-sidefire_linkmatch_frwy_2025_dup <- sidefire_linkmatch_frwy_2025 %>%
+rm(a, i, j, crs_feet, points, lines, lines_within_100ft, lines_within_100ft_frwy)
+
+############################################# find duplicated detector match, manual check (solved) ##########################################
+sidefire_linkmatch_frwy_2025_sensordup <- sidefire_linkmatch_frwy_2025 %>%
   group_by(sf_id) %>%
   filter(n() > 1) %>%
   ungroup()
 
-write.csv(sidefire_linkmatch_frwy_2025_dup, 
-          paste('~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/',
-                'sidefire_linkmatch_frwy_2025_v2_duplinks.csv', sep = ''), row.names = F)
-
+# write.csv(sidefire_linkmatch_frwy_2025_dup, 
+#          paste('~/0_ModelDataDevelopment/20250410_capacity_recalculation/RoadNetwork_2026/Sensor_count/',
+#                'sidefire_linkmatch_frwy_2025_v2_duplinks.csv', sep = ''), row.names = F)
 
 ##### Possibilities after manual check:
-## 1) more than two links within 100 ft, in the same direction (two consecutive links), are matched to one sidefire
-##    solution: choose the closest one
-## 2) simply delete dups
-sidefire_linkmatch_frwy_2025 = sidefire_linkmatch_frwy_2025[!duplicated(sidefire_linkmatch_frwy_2025$sf_id),]
+## 1) more than two links within 150 ft, in the same direction (two consecutive links), are matched to one sidefire
+##    solution: choose the closest one --> adopt this one
+
+## 2) simply delete dups (discard)
+# sidefire_linkmatch_frwy_2025 = sidefire_linkmatch_frwy_2025[!duplicated(sidefire_linkmatch_frwy_2025$sf_id),]
+
+############################################# find duplicated link match, manual check ##########################################
+# keep duplicated link match to keep as much records as possible, so do not delete dups
+sidefire_link_dup = 
+  unique(sidefire_linkmatch_frwy_2025$rdwy_id[duplicated(sidefire_linkmatch_frwy_2025$rdwy_id)])
+# some links have multiple detectors attached. In this case, still choose the closest one -- this has to be done after the rdwy match, separately
+for (i in 1:length(sidefire_link_dup)) {
+  matched_i = which(sidefire_linkmatch_frwy_2025$rdwy_id == sidefire_link_dup[i])
+  matched_rm = matched_i[which(sidefire_linkmatch_frwy_2025$distance[matched_i] > 
+                                      min(sidefire_linkmatch_frwy_2025$distance[matched_i]))]
+  if (length(matched_rm) > 0) {
+    sidefire_linkmatch_frwy_2025 = sidefire_linkmatch_frwy_2025[-matched_rm,]
+  }
+}
+
+# check if dup still exists
+sidefire_link_dup = 
+  unique(sidefire_linkmatch_frwy_2025$rdwy_id[duplicated(sidefire_linkmatch_frwy_2025$rdwy_id)])
+# manual check, delete the first one of each dup because they are in the same link
+sidefire_linkmatch_frwy_2025 = sidefire_linkmatch_frwy_2025[!duplicated(sidefire_linkmatch_frwy_2025$rdwy_id),]
+# check if dup still exists
+sidefire_link_dup = 
+  unique(sidefire_linkmatch_frwy_2025$rdwy_id[duplicated(sidefire_linkmatch_frwy_2025$rdwy_id)])
+
+rm(i,j,matched_i, matched_rm, sidefire_link_dup)
 
 ############################################# add weavetype & capacity & lanes to each matched record ##########################################
 sidefire_linkmatch_frwy_2025$weavetype = 0
