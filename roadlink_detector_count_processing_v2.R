@@ -202,7 +202,7 @@ vol_cap_byweave_time = data.frame(vol_cap_byweave_time)
 write.csv(vol_cap_byweave_time, 'vol_cap_byweave_time.csv', row.names = F)
 
 
-########################################### v/c & speed at different weave type, typical workday April ##############################################
+########################################### v/c & speed at different weave type, typical workday April  #############################################
 ########################################### v/c & speed at different weave type, typical workday April  #############################################
 ########################################### v/c & speed at different weave type, typical workday April  #############################################
 ########################################### v/c & speed at different weave type, typical workday April  #############################################
@@ -271,7 +271,7 @@ vol_cap_spd_frwy_2022_plot$spddiff = as.numeric(vol_cap_spd_frwy_2022_plot$ffspd
 png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Speed by lane, FRWY_BASIC.png", 
     width = 800, height = 600)
 ggplot(vol_cap_spd_frwy_2022_plot[which(vol_cap_spd_frwy_2022_plot$weavetype == 'FRWY_BASIC' & 
-                                          vol_cap_spd_frwy_2022_plot$time != 'OP',
+                                          vol_cap_spd_frwy_2022_plot$time != 'OP'&
                                           vol_cap_spd_frwy_2022_plot$spddiff > 0),], 
        aes(x = as.numeric(volperlane)/as.numeric(capperlane), y = as.numeric(spd), color = factor(lane))) + geom_point() +
   xlab('VC ratio') + ylab('Speed (MPH)') + 
@@ -286,7 +286,7 @@ dev.off()
 png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Speed by lane, BASIC.png", 
     width = 800, height = 600)
 ggplot(vol_cap_spd_frwy_2022_plot[which(vol_cap_spd_frwy_2022_plot$weavetype == 'BASIC' & 
-                                          vol_cap_spd_frwy_2022_plot$time != 'OP',
+                                          vol_cap_spd_frwy_2022_plot$time != 'OP' &
                                         vol_cap_spd_frwy_2022_plot$spddiff > 0),], 
        aes(x = as.numeric(volperlane)/as.numeric(capperlane), y = as.numeric(spd), color = factor(lane))) + geom_point() +
   xlab('VC ratio') + ylab('Speed (MPH)') + 
@@ -301,7 +301,7 @@ dev.off()
 png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Speed by lane, A.png", 
     width = 800, height = 600)
 ggplot(vol_cap_spd_frwy_2022_plot[which(vol_cap_spd_frwy_2022_plot$weavetype == 'A' & 
-                                          vol_cap_spd_frwy_2022_plot$time != 'OP',
+                                          vol_cap_spd_frwy_2022_plot$time != 'OP' &
                                         vol_cap_spd_frwy_2022_plot$spddiff > 0),], 
        aes(x = as.numeric(volperlane)/as.numeric(capperlane), y = as.numeric(spd), color = factor(lane))) + geom_point() +
   xlab('VC ratio') + ylab('Speed (MPH)') + 
@@ -316,7 +316,7 @@ dev.off()
 png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Speed by lane, B.png", 
     width = 800, height = 600)
 ggplot(vol_cap_spd_frwy_2022_plot[which(vol_cap_spd_frwy_2022_plot$weavetype == 'B' & 
-                                          vol_cap_spd_frwy_2022_plot$time != 'OP',
+                                          vol_cap_spd_frwy_2022_plot$time != 'OP' &
                                         vol_cap_spd_frwy_2022_plot$spddiff > 0),], 
        aes(x = as.numeric(volperlane)/as.numeric(capperlane), y = as.numeric(spd), color = factor(lane))) + geom_point() +
   xlab('VC ratio') + ylab('Speed (MPH)') + 
@@ -328,25 +328,10 @@ ggplot(vol_cap_spd_frwy_2022_plot[which(vol_cap_spd_frwy_2022_plot$weavetype == 
         plot.title = element_text(face = 'bold', size = 18))
 dev.off()
 
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Speed by lane, C.png", 
-    width = 800, height = 600) # no C (?)
-ggplot(vol_cap_spd_frwy_2022_plot[which(vol_cap_spd_frwy_2022_plot$weavetype == 'C' & 
-                                          vol_cap_spd_frwy_2022_plot$time != 'OP',
-                                        vol_cap_spd_frwy_2022_plot$spddiff > 0),], 
-       aes(x = as.numeric(volperlane)/as.numeric(capperlane), y = as.numeric(spd), color = factor(lane))) + geom_point() +
-  xlab('VC ratio') + ylab('Speed (MPH)') + 
-  labs(title = 'PK VC ratio vs Speed, weave type C, by lane number', color = 'Lane #') +
-  theme(legend.title = element_text(size = 18, face = "bold"),
-        legend.text = element_text(size = 16),
-        axis.text.x = element_text(size = 18),axis.text.y = element_text(size = 18),
-        axis.title.x = element_text(size = 18),axis.title.y = element_text(size = 18),
-        plot.title = element_text(face = 'bold', size = 18))
-dev.off()
-
 png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Speed by lane, MD.png", 
     width = 800, height = 600)
 ggplot(vol_cap_spd_frwy_2022_plot[which(vol_cap_spd_frwy_2022_plot$weavetype == 'MD' & 
-                                          vol_cap_spd_frwy_2022_plot$time != 'OP',
+                                          vol_cap_spd_frwy_2022_plot$time != 'OP' &
                                         vol_cap_spd_frwy_2022_plot$spddiff > 0),], 
        aes(x = as.numeric(volperlane)/as.numeric(capperlane), y = as.numeric(spd), color = factor(lane))) + geom_point() +
   xlab('VC ratio') + ylab('Speed (MPH)') + 
@@ -361,7 +346,7 @@ dev.off()
 png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Speed by lane, LBE.png", 
     width = 800, height = 600)
 ggplot(vol_cap_spd_frwy_2022_plot[which(vol_cap_spd_frwy_2022_plot$weavetype == 'LBE' & 
-                                          vol_cap_spd_frwy_2022_plot$time != 'OP',
+                                          vol_cap_spd_frwy_2022_plot$time != 'OP' &
                                         vol_cap_spd_frwy_2022_plot$spddiff > 0),], 
        aes(x = as.numeric(volperlane)/as.numeric(capperlane), y = as.numeric(spd), color = factor(lane))) + geom_point() +
   xlab('VC ratio') + ylab('Speed (MPH)') + 
