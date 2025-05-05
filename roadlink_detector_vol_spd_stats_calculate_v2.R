@@ -17,14 +17,14 @@ setwd("C:\\Users\\rtu\\OneDrive - The North Central Texas Council of Governments
 
 # in vol_per_day_2022, the data is hourly records. for example, volume_0_00 means the count from 12am to 1am, volume_0_15 means the count from 12:15am to 1:15am; the same for speed
 # check with vol_per_day 2022. Keep only Records_Per_Lane between 250 and 288, 
-vol_per_day_2022 = vol_per_day_2022_raw[which(vol_per_day_2022_raw$Records_Per_Lane >= 250 &
-                                                vol_per_day_2022_raw$Records_Per_Lane <= 288),]
+# vol_per_day_2022 = vol_per_day_2022_raw[which(vol_per_day_2022_raw$Records_Per_Lane >= 250 &
+#                                                vol_per_day_2022_raw$Records_Per_Lane <= 288),]
 # delete all dups if sensors ID & recorded data are exactly the same
-vol_per_day_2022$sensor_date_merge = paste(vol_per_day_2022$LinkID, vol_per_day_2022$Month, vol_per_day_2022$Date, sep = '_')
-vol_per_day_2022 = vol_per_day_2022[!duplicated(vol_per_day_2022$sensor_date_merge) & 
-                                      !duplicated(vol_per_day_2022$sensor_date_merge, fromLast = TRUE),]
+# vol_per_day_2022$sensor_date_merge = paste(vol_per_day_2022$LinkID, vol_per_day_2022$Month, vol_per_day_2022$Date, sep = '_')
+# vol_per_day_2022 = vol_per_day_2022[!duplicated(vol_per_day_2022$sensor_date_merge) & 
+#                                      !duplicated(vol_per_day_2022$sensor_date_merge, fromLast = TRUE),]
 # only select Tuesday, Wednesday & Thursday
-vol_per_day_2022 = vol_per_day_2022[which(vol_per_day_2022$DOW == 3 | vol_per_day_2022$DOW == 4 | vol_per_day_2022$DOW == 5),]
+# vol_per_day_2022 = vol_per_day_2022[which(vol_per_day_2022$DOW == 3 | vol_per_day_2022$DOW == 4 | vol_per_day_2022$DOW == 5),]
 
 # aggregate linkID in the detector file. Each row represents the count statistics (min, 15%, Q1 (25%), mean, 50%, Q3 (75%), 85%, 90%, 95%, 97.5%, 98%, 99%, max) & its corresponding at peak hours
 
@@ -95,36 +95,36 @@ for (i in 1:nrow(sidefire_vol_spd_2022_am)) {
   }
   
   # we already chose records under spdff, vol and spd are already in the same order, so we don't have to change
-  # sidefire_vol_spd_2022_am$volmin[i] = min(volarray_i, na.rm = T); minIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volmin[i])
-  # sidefire_vol_spd_2022_am$vol15[i] = quantile(volarray_i, na.rm = T, 0.15); q15Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol15[i])
-  # sidefire_vol_spd_2022_am$vol25[i] = quantile(volarray_i, na.rm = T, 0.25); q25Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol25[i])
-  # sidefire_vol_spd_2022_am$vol50[i] = quantile(volarray_i, na.rm = T, 0.50); q50Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol50[i])
-  # sidefire_vol_spd_2022_am$volavg[i] = mean(volarray_i, na.rm = T); avgIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volavg[i])
-  # sidefire_vol_spd_2022_am$vol75[i] = quantile(volarray_i, na.rm = T, 0.75); q75Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol75[i])
-  # sidefire_vol_spd_2022_am$vol85[i] = quantile(volarray_i, na.rm = T, 0.85); q85Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol85[i])
-  # sidefire_vol_spd_2022_am$vol90[i] = quantile(volarray_i, na.rm = T, 0.90); q90Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol90[i])
-  # sidefire_vol_spd_2022_am$vol95[i] = quantile(volarray_i, na.rm = T, 0.95); q95Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol95[i])
-  # sidefire_vol_spd_2022_am$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol975[i])
-  # sidefire_vol_spd_2022_am$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol99[i])
-  #sidefire_vol_spd_2022_am$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volmax[i])
+  sidefire_vol_spd_2022_am$volmin[i] = min(volarray_i, na.rm = T); minIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volmin[i])
+  sidefire_vol_spd_2022_am$vol15[i] = quantile(volarray_i, na.rm = T, 0.15); q15Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol15[i])
+  sidefire_vol_spd_2022_am$vol25[i] = quantile(volarray_i, na.rm = T, 0.25); q25Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol25[i])
+  sidefire_vol_spd_2022_am$vol50[i] = quantile(volarray_i, na.rm = T, 0.50); q50Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol50[i])
+  sidefire_vol_spd_2022_am$volavg[i] = mean(volarray_i, na.rm = T); avgIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volavg[i])
+  sidefire_vol_spd_2022_am$vol75[i] = quantile(volarray_i, na.rm = T, 0.75); q75Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol75[i])
+  sidefire_vol_spd_2022_am$vol85[i] = quantile(volarray_i, na.rm = T, 0.85); q85Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol85[i])
+  sidefire_vol_spd_2022_am$vol90[i] = quantile(volarray_i, na.rm = T, 0.90); q90Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol90[i])
+  sidefire_vol_spd_2022_am$vol95[i] = quantile(volarray_i, na.rm = T, 0.95); q95Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol95[i])
+  sidefire_vol_spd_2022_am$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol975[i])
+  sidefire_vol_spd_2022_am$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_am$vol99[i])
+  sidefire_vol_spd_2022_am$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volmax[i])
   sidefire_vol_spd_2022_am$volboxupper[i] = min(sidefire_vol_spd_2022_am$vol75[i] + 
     1.5*(sidefire_vol_spd_2022_am$vol75[i] - sidefire_vol_spd_2022_am$vol25[i]), sidefire_vol_spd_2022_am$volmax[i])
   boxupperIndex = getIndex(volarray_i,sidefire_vol_spd_2022_am$volboxupper[i])
   
   # speed stats from sidefire detector, vol_per_day which takes records per 15-minute interval
-  # sidefire_vol_spd_2022_am$spdmin[i] = mean(spdarray_i[minIndex])
-  # sidefire_vol_spd_2022_am$spd15[i] = mean(spdarray_i[q15Index])
-  # sidefire_vol_spd_2022_am$spd25[i] = mean(spdarray_i[q25Index])
-  # sidefire_vol_spd_2022_am$spd50[i] = mean(spdarray_i[q50Index])
-  # sidefire_vol_spd_2022_am$spdavg[i] = mean(spdarray_i[avgIndex])
-  # sidefire_vol_spd_2022_am$spd75[i] = mean(spdarray_i[q75Index])
-  # sidefire_vol_spd_2022_am$spd85[i] = mean(spdarray_i[q85Index])
-  # sidefire_vol_spd_2022_am$spd90[i] = mean(spdarray_i[q90Index])
-  # sidefire_vol_spd_2022_am$spd95[i] = mean(spdarray_i[q95Index])
-  # sidefire_vol_spd_2022_am$spd975[i] = mean(spdarray_i[q975Index])
-  # sidefire_vol_spd_2022_am$spd99[i] = mean(spdarray_i[q99Index])
-  # sidefire_vol_spd_2022_am$spdmax[i] = mean(spdarray_i[maxIndex])
-  sidefire_vol_spd_2022_am$spdboxupper[i] = min(spdarray_i[boxupperIndex])
+  sidefire_vol_spd_2022_am$spdmin[i] = mean(spdarray_i[minIndex])
+  sidefire_vol_spd_2022_am$spd15[i] = mean(spdarray_i[q15Index])
+  sidefire_vol_spd_2022_am$spd25[i] = mean(spdarray_i[q25Index])
+  sidefire_vol_spd_2022_am$spd50[i] = mean(spdarray_i[q50Index])
+  sidefire_vol_spd_2022_am$spdavg[i] = mean(spdarray_i[avgIndex])
+  sidefire_vol_spd_2022_am$spd75[i] = mean(spdarray_i[q75Index])
+  sidefire_vol_spd_2022_am$spd85[i] = mean(spdarray_i[q85Index])
+  sidefire_vol_spd_2022_am$spd90[i] = mean(spdarray_i[q90Index])
+  sidefire_vol_spd_2022_am$spd95[i] = mean(spdarray_i[q95Index])
+  sidefire_vol_spd_2022_am$spd975[i] = mean(spdarray_i[q975Index])
+  sidefire_vol_spd_2022_am$spd99[i] = mean(spdarray_i[q99Index])
+  sidefire_vol_spd_2022_am$spdmax[i] = mean(spdarray_i[maxIndex])
+  sidefire_vol_spd_2022_am$spdboxupper[i] = mean(spdarray_i[boxupperIndex])
 }
 
 
@@ -189,36 +189,36 @@ for (i in 1:nrow(sidefire_vol_spd_2022_pm)) {
   }
   
   # we already chose records under spdff, vol and spd are already in the same order, so we don't have to change
-  # sidefire_vol_spd_2022_pm$volmin[i] = min(volarray_i, na.rm = T); minIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volmin[i])
-  # sidefire_vol_spd_2022_pm$vol15[i] = quantile(volarray_i, na.rm = T, 0.15); q15Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol15[i])
-  # sidefire_vol_spd_2022_pm$vol25[i] = quantile(volarray_i, na.rm = T, 0.25); q25Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol25[i])
-  # sidefire_vol_spd_2022_pm$vol50[i] = quantile(volarray_i, na.rm = T, 0.50); q50Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol50[i])
-  # sidefire_vol_spd_2022_pm$volavg[i] = mean(volarray_i, na.rm = T); avgIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volavg[i])
-  # sidefire_vol_spd_2022_pm$vol75[i] = quantile(volarray_i, na.rm = T, 0.75); q75Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol75[i])
-  # sidefire_vol_spd_2022_pm$vol85[i] = quantile(volarray_i, na.rm = T, 0.85); q85Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol85[i])
-  # sidefire_vol_spd_2022_pm$vol90[i] = quantile(volarray_i, na.rm = T, 0.90); q90Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol90[i])
-  # sidefire_vol_spd_2022_pm$vol95[i] = quantile(volarray_i, na.rm = T, 0.95); q95Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol95[i])
-  # sidefire_vol_spd_2022_pm$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol975[i])
-  # sidefire_vol_spd_2022_pm$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol99[i])
-  # sidefire_vol_spd_2022_pm$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volmax[i])
+  sidefire_vol_spd_2022_pm$volmin[i] = min(volarray_i, na.rm = T); minIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volmin[i])
+  sidefire_vol_spd_2022_pm$vol15[i] = quantile(volarray_i, na.rm = T, 0.15); q15Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol15[i])
+  sidefire_vol_spd_2022_pm$vol25[i] = quantile(volarray_i, na.rm = T, 0.25); q25Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol25[i])
+  sidefire_vol_spd_2022_pm$vol50[i] = quantile(volarray_i, na.rm = T, 0.50); q50Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol50[i])
+  sidefire_vol_spd_2022_pm$volavg[i] = mean(volarray_i, na.rm = T); avgIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volavg[i])
+  sidefire_vol_spd_2022_pm$vol75[i] = quantile(volarray_i, na.rm = T, 0.75); q75Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol75[i])
+  sidefire_vol_spd_2022_pm$vol85[i] = quantile(volarray_i, na.rm = T, 0.85); q85Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol85[i])
+  sidefire_vol_spd_2022_pm$vol90[i] = quantile(volarray_i, na.rm = T, 0.90); q90Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol90[i])
+  sidefire_vol_spd_2022_pm$vol95[i] = quantile(volarray_i, na.rm = T, 0.95); q95Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol95[i])
+  sidefire_vol_spd_2022_pm$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol975[i])
+  sidefire_vol_spd_2022_pm$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_pm$vol99[i])
+  sidefire_vol_spd_2022_pm$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volmax[i])
   sidefire_vol_spd_2022_pm$volboxupper[i] = min(sidefire_vol_spd_2022_pm$vol75[i] + 
     1.5*(sidefire_vol_spd_2022_pm$vol75[i] - sidefire_vol_spd_2022_pm$vol25[i]), sidefire_vol_spd_2022_pm$volmax[i])
   boxupperIndex = getIndex(volarray_i,sidefire_vol_spd_2022_pm$volboxupper[i])
   
   # speed stats from sidefire detector, vol_per_day which takes records per 15-minute interval
-  # sidefire_vol_spd_2022_pm$spdmin[i] = mean(spdarray_i[minIndex])
-  # sidefire_vol_spd_2022_pm$spd15[i] = mean(spdarray_i[q15Index])
-  # sidefire_vol_spd_2022_pm$spd25[i] = mean(spdarray_i[q25Index])
-  # sidefire_vol_spd_2022_pm$spd50[i] = mean(spdarray_i[q50Index])
-  # sidefire_vol_spd_2022_pm$spdavg[i] = mean(spdarray_i[avgIndex])
-  # sidefire_vol_spd_2022_pm$spd75[i] = mean(spdarray_i[q75Index])
-  # sidefire_vol_spd_2022_pm$spd85[i] = mean(spdarray_i[q85Index])
-  # sidefire_vol_spd_2022_pm$spd90[i] = mean(spdarray_i[q90Index])
-  # sidefire_vol_spd_2022_pm$spd95[i] = mean(spdarray_i[q95Index])
-  # sidefire_vol_spd_2022_pm$spd975[i] = mean(spdarray_i[q975Index])
-  # sidefire_vol_spd_2022_pm$spd99[i] = mean(spdarray_i[q99Index])
-  # sidefire_vol_spd_2022_pm$spdmax[i] = mean(spdarray_i[maxIndex])
-  sidefire_vol_spd_2022_pm$spdboxupper[i] = min(spdarray_i[boxupperIndex])
+  sidefire_vol_spd_2022_pm$spdmin[i] = mean(spdarray_i[minIndex])
+  sidefire_vol_spd_2022_pm$spd15[i] = mean(spdarray_i[q15Index])
+  sidefire_vol_spd_2022_pm$spd25[i] = mean(spdarray_i[q25Index])
+  sidefire_vol_spd_2022_pm$spd50[i] = mean(spdarray_i[q50Index])
+  sidefire_vol_spd_2022_pm$spdavg[i] = mean(spdarray_i[avgIndex])
+  sidefire_vol_spd_2022_pm$spd75[i] = mean(spdarray_i[q75Index])
+  sidefire_vol_spd_2022_pm$spd85[i] = mean(spdarray_i[q85Index])
+  sidefire_vol_spd_2022_pm$spd90[i] = mean(spdarray_i[q90Index])
+  sidefire_vol_spd_2022_pm$spd95[i] = mean(spdarray_i[q95Index])
+  sidefire_vol_spd_2022_pm$spd975[i] = mean(spdarray_i[q975Index])
+  sidefire_vol_spd_2022_pm$spd99[i] = mean(spdarray_i[q99Index])
+  sidefire_vol_spd_2022_pm$spdmax[i] = mean(spdarray_i[maxIndex])
+  sidefire_vol_spd_2022_pm$spdboxupper[i] = mean(spdarray_i[boxupperIndex])
 }
 
 
@@ -290,36 +290,36 @@ for (i in 1:nrow(sidefire_vol_spd_2022_op)) {
   }
   
   # we already chose records under spdff, vol and spd are already in the same order, so we don't have to change
-  # sidefire_vol_spd_2022_op$volmin[i] = min(volarray_i, na.rm = T); minIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volmin[i])
-  # sidefire_vol_spd_2022_op$vol15[i] = quantile(volarray_i, na.rm = T, 0.15); q15Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol15[i])
-  # sidefire_vol_spd_2022_op$vol25[i] = quantile(volarray_i, na.rm = T, 0.25); q25Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol25[i])
-  # sidefire_vol_spd_2022_op$vol50[i] = quantile(volarray_i, na.rm = T, 0.50); q50Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol50[i])
-  # sidefire_vol_spd_2022_op$volavg[i] = mean(volarray_i, na.rm = T); avgIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volavg[i])
-  # sidefire_vol_spd_2022_op$vol75[i] = quantile(volarray_i, na.rm = T, 0.75); q75Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol75[i])
-  # sidefire_vol_spd_2022_op$vol85[i] = quantile(volarray_i, na.rm = T, 0.85); q85Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol85[i])
-  # sidefire_vol_spd_2022_op$vol90[i] = quantile(volarray_i, na.rm = T, 0.90); q90Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol90[i])
-  # sidefire_vol_spd_2022_op$vol95[i] = quantile(volarray_i, na.rm = T, 0.95); q95Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol95[i])
-  # sidefire_vol_spd_2022_op$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol975[i])
-  # sidefire_vol_spd_2022_op$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol99[i])
-  # sidefire_vol_spd_2022_op$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volmax[i])
+  sidefire_vol_spd_2022_op$volmin[i] = min(volarray_i, na.rm = T); minIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volmin[i])
+  sidefire_vol_spd_2022_op$vol15[i] = quantile(volarray_i, na.rm = T, 0.15); q15Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol15[i])
+  sidefire_vol_spd_2022_op$vol25[i] = quantile(volarray_i, na.rm = T, 0.25); q25Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol25[i])
+  sidefire_vol_spd_2022_op$vol50[i] = quantile(volarray_i, na.rm = T, 0.50); q50Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol50[i])
+  sidefire_vol_spd_2022_op$volavg[i] = mean(volarray_i, na.rm = T); avgIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volavg[i])
+  sidefire_vol_spd_2022_op$vol75[i] = quantile(volarray_i, na.rm = T, 0.75); q75Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol75[i])
+  sidefire_vol_spd_2022_op$vol85[i] = quantile(volarray_i, na.rm = T, 0.85); q85Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol85[i])
+  sidefire_vol_spd_2022_op$vol90[i] = quantile(volarray_i, na.rm = T, 0.90); q90Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol90[i])
+  sidefire_vol_spd_2022_op$vol95[i] = quantile(volarray_i, na.rm = T, 0.95); q95Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol95[i])
+  sidefire_vol_spd_2022_op$vol975[i] = quantile(volarray_i, na.rm = T, 0.975); q975Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol975[i])
+  sidefire_vol_spd_2022_op$vol99[i] = quantile(volarray_i, na.rm = T, 0.99); q99Index = getIndex(volarray_i,sidefire_vol_spd_2022_op$vol99[i])
+  sidefire_vol_spd_2022_op$volmax[i] = max(volarray_i, na.rm = T); maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volmax[i])
    sidefire_vol_spd_2022_op$volboxupper[i] = min(sidefire_vol_spd_2022_op$vol75[i] + 
     1.5*(sidefire_vol_spd_2022_op$vol75[i] - sidefire_vol_spd_2022_op$vol25[i]), sidefire_vol_spd_2022_op$volmax[i])
   boxupperIndex = getIndex(volarray_i,sidefire_vol_spd_2022_op$volboxupper[i])
   
   # speed stats from sidefire detector, vol_per_day which takes records per 15-minute interval
-  # sidefire_vol_spd_2022_op$spdmin[i] = mean(spdarray_i[minIndex])
-  # sidefire_vol_spd_2022_op$spd15[i] = mean(spdarray_i[q15Index])
-  # sidefire_vol_spd_2022_op$spd25[i] = mean(spdarray_i[q25Index])
-  # sidefire_vol_spd_2022_op$spd50[i] = mean(spdarray_i[q50Index])
-  # sidefire_vol_spd_2022_op$spdavg[i] = mean(spdarray_i[avgIndex])
-  # sidefire_vol_spd_2022_op$spd75[i] = mean(spdarray_i[q75Index])
-  # sidefire_vol_spd_2022_op$spd85[i] = mean(spdarray_i[q85Index])
-  # sidefire_vol_spd_2022_op$spd90[i] = mean(spdarray_i[q90Index])
-  # sidefire_vol_spd_2022_op$spd95[i] = mean(spdarray_i[q95Index])
-  # sidefire_vol_spd_2022_op$spd975[i] = mean(spdarray_i[q975Index])
-  # sidefire_vol_spd_2022_op$spd99[i] = mean(spdarray_i[q99Index])
-  # sidefire_vol_spd_2022_op$spdmax[i] = mean(spdarray_i[maxIndex])
-  sidefire_vol_spd_2022_op$spdboxupper[i] = min(spdarray_i[boxupperIndex])
+  sidefire_vol_spd_2022_op$spdmin[i] = mean(spdarray_i[minIndex])
+  sidefire_vol_spd_2022_op$spd15[i] = mean(spdarray_i[q15Index])
+  sidefire_vol_spd_2022_op$spd25[i] = mean(spdarray_i[q25Index])
+  sidefire_vol_spd_2022_op$spd50[i] = mean(spdarray_i[q50Index])
+  sidefire_vol_spd_2022_op$spdavg[i] = mean(spdarray_i[avgIndex])
+  sidefire_vol_spd_2022_op$spd75[i] = mean(spdarray_i[q75Index])
+  sidefire_vol_spd_2022_op$spd85[i] = mean(spdarray_i[q85Index])
+  sidefire_vol_spd_2022_op$spd90[i] = mean(spdarray_i[q90Index])
+  sidefire_vol_spd_2022_op$spd95[i] = mean(spdarray_i[q95Index])
+  sidefire_vol_spd_2022_op$spd975[i] = mean(spdarray_i[q975Index])
+  sidefire_vol_spd_2022_op$spd99[i] = mean(spdarray_i[q99Index])
+  sidefire_vol_spd_2022_op$spdmax[i] = mean(spdarray_i[maxIndex])
+  sidefire_vol_spd_2022_op$spdboxupper[i] = mean(spdarray_i[boxupperIndex])
 }
 
 ########################################### add weavetype & capacity & lanes & ffspd to each record for plot #############################################
@@ -354,6 +354,7 @@ rm(i,spd_lowerff,spdarray_i,volarray_i,link_i,
 
 rm(amhrcap, amlane,amspd,amspdcol,amvol,amvolcol,i,id,link_id,ophrcap,oplane,opspd,opspdcol,opvol,opvolcol,pmlane,pmspd,pmspdcol,
    pmvol,pmvolcol,pmhrcap,weave,link_i)
+
 ########################################### Define function first #############################################
 ########################################### Define function first #############################################
 # function: return NA stats if all values of an array is NA
