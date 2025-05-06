@@ -18,8 +18,8 @@ roadlink_2026 = st_read('20250410_capacity_recalculation\\RoadNetwork_2026\\ArcG
 taz_2026 = st_read('20250410_capacity_recalculation\\RoadNetwork_2026\\ArcGIS\\TAZ\\taz_shp.shp')
 
 sidefire_2025 <- sidefire2025 %>%
-  select(ID, LINKNAME, FUNCL, DIR, geometry)
-colnames(sidefire_2025) = c('ID', 'LINKNAME', 'FUNCL', 'DIR', 'geometry')
+  select(ID, LINKNAME, FUNCL, DIR, TMC, geometry)
+colnames(sidefire_2025) = c('ID', 'LINKNAME', 'FUNCL', 'DIR', 'TMC', 'geometry')
 
 # st_crs(sidefire_2025) == st_crs(roadlink_2026)  # should be TRUE, check if two layers are in the same coordinate
 # st_crs(sidefire_2025) == st_crs(taz_2026) # should be TRUE, check if two layers are in the same coordinate
