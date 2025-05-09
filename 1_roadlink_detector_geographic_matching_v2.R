@@ -122,7 +122,7 @@ sidefire_linkmatch_frwy_2025_sensordup <- sidefire_linkmatch_frwy_2025 %>%
 ## 2) simply delete dups (discard)
 # sidefire_linkmatch_frwy_2025 = sidefire_linkmatch_frwy_2025[!duplicated(sidefire_linkmatch_frwy_2025$sf_id),]
 
-############################################# find duplicated link match, manual check ##########################################
+############################################# find duplicated link match, manual check (do not run) ##########################################
 # keep duplicated link match to keep as much records as possible, so do not delete dups
 sidefire_link_dup = 
   unique(sidefire_linkmatch_frwy_2025$rdwy_id[duplicated(sidefire_linkmatch_frwy_2025$rdwy_id)])
@@ -147,6 +147,7 @@ sidefire_link_dup =
 
 rm(i,j,matched_i, matched_rm, sidefire_link_dup)
 
+
 ############################################# add weavetype & capacity & lanes to each matched record ##########################################
 sidefire_linkmatch_frwy_2025$weavetype = 0
 sidefire_linkmatch_frwy_2025$amhrcap = 0
@@ -158,6 +159,7 @@ sidefire_linkmatch_frwy_2025$pmlane = 0
 sidefire_linkmatch_frwy_2025$amffspd = 0
 sidefire_linkmatch_frwy_2025$pmffspd = 0
 sidefire_linkmatch_frwy_2025$opffspd = 0
+sidefire_linkmatch_frwy_2025$areatype = 0
 
 for (i in 1:nrow(sidefire_linkmatch_frwy_2025)) {
   sidefire_linkmatch_frwy_2025$weavetype[i] = roadlink_2026$WEAVE_T[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])]
@@ -181,7 +183,25 @@ for (i in 1:nrow(sidefire_linkmatch_frwy_2025)) {
                                                  roadlink_2026$PKFRSPD_B[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
   sidefire_linkmatch_frwy_2025$opffspd[i] = max(roadlink_2026$OPFRSPD_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
                                                 roadlink_2026$OPFRSPD_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
+  
+  sidefire_linkmatch_frwy_2025$areatype[i] = roadlink_2026$AREATYP[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])]
 }
+
+
+### check if lane numbers are the same
+plot(as.numeric(sidefire_linkmatch_frwy_2025$amlane) - as.numeric(sidefire_linkmatch_frwy_2025$pmlane))
+plot(as.numeric(sidefire_linkmatch_frwy_2025$amlane) - as.numeric(sidefire_linkmatch_frwy_2025$oplane))
+## conclusion: lanes are the same, don't worry about the lanes
+
+### check if ffspd are the same
+plot(as.numeric(sidefire_linkmatch_frwy_2025$amffspd) - as.numeric(sidefire_linkmatch_frwy_2025$pmffspd))
+plot(as.numeric(sidefire_linkmatch_frwy_2025$amffspd) - as.numeric(sidefire_linkmatch_frwy_2025$opffspd))
+## conclusion: ffspd are the same, don't worry about the lanes
+
+### check if hrcap are the same
+plot(as.numeric(sidefire_linkmatch_frwy_2025$amhrcap) - as.numeric(sidefire_linkmatch_frwy_2025$pmhrcap))
+plot(as.numeric(sidefire_linkmatch_frwy_2025$amhrcap) - as.numeric(sidefire_linkmatch_frwy_2025$ophrcap))
+## conclusion: ffspd are the same, don't worry about the lanes
 
 
 

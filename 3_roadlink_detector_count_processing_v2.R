@@ -1,5 +1,7 @@
 ## updates in v2: 
 ## use sidefire_linkmatch_frwy_2025 to match count records instead of sidefire_inTAZ_2025
+## this coding file distinguishes AM, PM, and OP, store them into different data tables, and plot for comparison
+## because of data insufficiency, May 09 onward no longer considers time split
 
 setwd("C:/Users/rtu/OneDrive - The North Central Texas Council of Governments/Documents/0_ModelDataDevelopment/")
 
@@ -214,7 +216,7 @@ pmvolcol = seq(80,94); pmspdcol = seq(173, 187)
 # OP, volcol = c(seq(20,45),seq(56,79),seq(95,112)); spdcol = c(seq(113,138),seq(149,172),seq(188,205))
 opvolcol = c(seq(20,45),seq(56,79),seq(95,112)); opspdcol = c(seq(113,138),seq(149,172),seq(188,205))
 
-link_id = unique(vol_per_day_2022_04$LinkID) 
+link_id = unique(vol_per_day_2022_workday$LinkID) 
 timeperiod = c('AM', 'PM', 'OP')
 
 # create a dataframe to plot v/c & speed diagram
@@ -224,26 +226,26 @@ for (i in 1:length(link_id)) {
   id = link_id[i]
   vol_cap_spd_frwy_2022_plot = rbind(vol_cap_spd_frwy_2022_plot,
                                      cbind(id,                                                                                       # link ID
-                                           unique(vol_per_day_2022_04$weavetype[which(vol_per_day_2022_04$LinkID == id)]),           # weaving type 
+                                           unique(vol_per_day_2022_workday$weavetype[which(vol_per_day_2022_workday$LinkID == id)]),           # weaving type 
                                            
-                                           rbind(cbind('AM', unique(vol_per_day_2022_04$amlane[which(vol_per_day_2022_04$LinkID == id)]),    # lane @ am
-                                                       unique(vol_per_day_2022_04$amffspd[which(vol_per_day_2022_04$LinkID == id)]),         # ffspd @ am
-                                                       unique(vol_per_day_2022_04$amhrcap[which(vol_per_day_2022_04$LinkID == id)]),         # hrcap @ am
-                                                       as.vector(t(vol_per_day_2022_04[which(vol_per_day_2022_04$LinkID == id),amvolcol])),  # all hrly vol @ am 
-                                                       as.vector(t(vol_per_day_2022_04[which(vol_per_day_2022_04$LinkID == id),amspdcol]))), # all hrly spd @ am
+                                           rbind(cbind('AM', unique(vol_per_day_2022_workday$amlane[which(vol_per_day_2022_workday$LinkID == id)]),    # lane @ am
+                                                       unique(vol_per_day_2022_workday$amffspd[which(vol_per_day_2022_workday$LinkID == id)]),         # ffspd @ am
+                                                       unique(vol_per_day_2022_workday$amhrcap[which(vol_per_day_2022_workday$LinkID == id)]),         # hrcap @ am
+                                                       as.vector(t(vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == id),amvolcol])),  # all hrly vol @ am 
+                                                       as.vector(t(vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == id),amspdcol]))), # all hrly spd @ am
                                                  
                                                  # same comments for the following PM and OP
-                                                 cbind('PM', unique(vol_per_day_2022_04$pmlane[which(vol_per_day_2022_04$LinkID == id)]), 
-                                                       unique(vol_per_day_2022_04$pmffspd[which(vol_per_day_2022_04$LinkID == id)]), 
-                                                       unique(vol_per_day_2022_04$pmhrcap[which(vol_per_day_2022_04$LinkID == id)]), 
-                                                       as.vector(t(vol_per_day_2022_04[which(vol_per_day_2022_04$LinkID == id),pmvolcol])), 
-                                                       as.vector(t(vol_per_day_2022_04[which(vol_per_day_2022_04$LinkID == id),pmspdcol]))),
+                                                 cbind('PM', unique(vol_per_day_2022_workday$pmlane[which(vol_per_day_2022_workday$LinkID == id)]), 
+                                                       unique(vol_per_day_2022_workday$pmffspd[which(vol_per_day_2022_workday$LinkID == id)]), 
+                                                       unique(vol_per_day_2022_workday$pmhrcap[which(vol_per_day_2022_workday$LinkID == id)]), 
+                                                       as.vector(t(vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == id),pmvolcol])), 
+                                                       as.vector(t(vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == id),pmspdcol]))),
                                                  
-                                                 cbind('OP', unique(vol_per_day_2022_04$oplane[which(vol_per_day_2022_04$LinkID == id)]), 
-                                                       unique(vol_per_day_2022_04$opffspd[which(vol_per_day_2022_04$LinkID == id)]), 
-                                                       unique(vol_per_day_2022_04$ophrcap[which(vol_per_day_2022_04$LinkID == id)]), 
-                                                       as.vector(t(vol_per_day_2022_04[which(vol_per_day_2022_04$LinkID == id),opvolcol])), 
-                                                       as.vector(t(vol_per_day_2022_04[which(vol_per_day_2022_04$LinkID == id),opspdcol]))))))
+                                                 cbind('OP', unique(vol_per_day_2022_workday$oplane[which(vol_per_day_2022_workday$LinkID == id)]), 
+                                                       unique(vol_per_day_2022_workday$opffspd[which(vol_per_day_2022_workday$LinkID == id)]), 
+                                                       unique(vol_per_day_2022_workday$ophrcap[which(vol_per_day_2022_workday$LinkID == id)]), 
+                                                       as.vector(t(vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == id),opvolcol])), 
+                                                       as.vector(t(vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == id),opspdcol]))))))
 }
 
 # convert to numeric

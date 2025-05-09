@@ -1,28 +1,30 @@
 ## new code created on May 6, 2025
 ## identify congested rdwy segments using sidefire data and npmrds
+## updated May 09, sf_2022_npmrds_2025 has been scaled up to 1.1
 
 setwd("C:/Users/rtu/OneDrive - The North Central Texas Council of Governments/Documents/0_ModelDataDevelopment/")
 
 library(ggplot2)
 library(viridis)  # for colorblind-friendly palettes
 
-######################## filter out records in vol_per_day_2022_raw of which sensor ID matches #############
-sidefire_ID = unique(sidefire_linkmatch_frwy_2025$sf_id)
-# instead of appending, first select rows from vol_per_day data, then select the data of corresponding row --> fasten the process
-row_to_select = array(0, dim = 0)
-for (i in 1:length(sidefire_ID)) {
-  row_to_select = c(row_to_select, which(vol_per_day_2022_raw$LinkID == sidefire_ID[i]))
-}
+## Data sources: 
+## 1) sidefire_linkmatch_frwy_2025 is the SF MRDWY match, generated from roadlink_detector_geographic_matching_v2.R
+## 2) sf_2022_npmrds_2025 and sf_2022_npmrds_2025_plot from roadlink_sf_npmrds_match_compare.R
+## 3) vol_per_day_2022 is the processed data from the first section, different from roadlink_detector_vol_spd_stats_calculate_v2.R, which only has workday
+## 4) vol_per_day_2022_linkmatch is the processed data from roadlink_sf_npmrds_match_compare.R, which deletes invalid data (Records_per_lane & dups)
+## 5) vol_per_day_2022_raw is the raw data read from file
 
-vol_per_day_2022_raw_linkmatch = vol_per_day_2022_raw[row_to_select,] # 1334 detectors in 2022 hourly count match with the roadlink & 2025 detector location
+####################################### Filter out valid dataset with matched link ##############################################
+## delete records that has 250-288 records_per_lane, and all dups
 
-# select workday, Tuesday, Wednesday, Thursday & February (matches with npmrds data)
-vol_per_day_2022_workday = vol_per_day_2022_raw_linkmatch[which((vol_per_day_2022_raw_linkmatch$DOW == 3 |
-                                                                  vol_per_day_2022_raw_linkmatch$DOW == 4 |
-                                                                  vol_per_day_2022_raw_linkmatch$DOW == 5) & # after workday filter, 1334 detectors 
-                                                                  vol_per_day_2022_raw_linkmatch$Records_Per_Lane >= 250 &
-                                                                  vol_per_day_2022_raw_linkmatch$Records_Per_Lane <= 288 & # after records_per_lane filter, 948 detectors
-                                                                  vol_per_day_2022_raw_linkmatch$Month == 2),] # select Feb records, 898 detectors
+# check with vol_per_day 2022. Keep only Records_Per_Lane between 250 and 288, 
+# vol_per_day_2022 = vol_per_day_2022_raw[which(vol_per_day_2022_raw$Records_Per_Lane >= 250 &
+#                                                vol_per_day_2022_raw$Records_Per_Lane <= 288),]
+# delete all dups if sensors ID & recorded data are exactly the same
+# vol_per_day_2022$sensor_date_merge = paste(vol_per_day_2022$LinkID, vol_per_day_2022$Month, vol_per_day_2022$Date, sep = '_')
+# vol_per_day_2022 = vol_per_day_2022[!duplicated(vol_per_day_2022$sensor_date_merge) & 
+#                                      !duplicated(vol_per_day_2022$sensor_date_merge, fromLast = TRUE),] # 1322 link ID remains
+
 
 ############################### read npmrds feb 2024 average speed and match with sidefire ################
 # first select locations (key: TMC) where average speed is lower than a certain threshold --> based on HCM
@@ -50,9 +52,10 @@ for (i in 1:nrow(sidefire_linkmatch_frwy_2025)) {
 }
 
 ## create a matrix that stores both npmrds, sidefire, and rdwy info in pk & op, including: lane, ffspd, cap, avgspd_npm, avgspd_sf, avgvol_sf
+## updated May 9, all the sf count in this plot file has been scaled up to 1.1
 sf_2022_npmrds_2025 = data.frame(cbind(sidefire_linkmatch_frwy_2025$sf_id, sidefire_linkmatch_frwy_2025$rdwy_id, 
                             sidefire_linkmatch_frwy_2025$TMC, sidefire_linkmatch_frwy_2025$npmrds_tmc,
-                            sidefire_linkmatch_frwy_2025$weavetype, 
+                            sidefire_linkmatch_frwy_2025$weavetype, sidefire_linkmatch_frwy_2025$areatype,
                             
                             sidefire_linkmatch_frwy_2025$amffspd, sidefire_linkmatch_frwy_2025$pmffspd, 
                             sidefire_linkmatch_frwy_2025$opffspd, sidefire_linkmatch_frwy_2025$opffspd, # am op and pm op, two separated columns for convenience
@@ -68,7 +71,7 @@ sf_2022_npmrds_2025$amavgspd_npm = 0; sf_2022_npmrds_2025$pmavgspd_npm = 0; sf_2
 sf_2022_npmrds_2025$amavgvol_sf = 0; sf_2022_npmrds_2025$pmavgvol_sf = 0; sf_2022_npmrds_2025$amopavgvol_sf = 0; sf_2022_npmrds_2025$pmopavgvol_sf = 0
 
 
-colnames(sf_2022_npmrds_2025) = c('sf_id','rdwy_id','TMC_sf', 'TMC_npm', 'weavetype',
+colnames(sf_2022_npmrds_2025) = c('sf_id','rdwy_id','TMC_sf', 'TMC_npm', 'weavetype', 'areatype',
                                   'amffspd','pmffspd','amopffspd','pmopffspd',
                                   'amlane','pmlane','amoplane','pmoplane',
                                   'amhrcap','pmhrcap','amophrcap','pmophrcap',
@@ -97,7 +100,7 @@ pmopvolcol = seq(104, 108); pmopspdcol = seq(197, 204)
 row_to_delete = array(0, dim = 0) # count how many sf_id in the sidefire_2025 cannot be matched with vol per day 2022
 for (i in 1:nrow(sf_2022_npmrds_2025)) {
   ## first find if vol per day has data or not
-  link_i = vol_per_day_2022_raw_linkmatch[which(vol_per_day_2022_raw_linkmatch$LinkID == sf_2022_npmrds_2025$sf_id[i]),]
+  link_i = vol_per_day_2022_feb_workday[which(vol_per_day_2022_feb_workday$LinkID == sf_2022_npmrds_2025$sf_id[i]),]
   if (nrow(link_i) == 0) {
     row_to_delete = c(row_to_delete, i)
     print(paste('SF detector', sf_2022_npmrds_2025$sf_id[i], 'not found in vol per day 2022 raw'))
@@ -112,7 +115,7 @@ for (i in 1:nrow(sf_2022_npmrds_2025)) {
     print(paste('All AM vol & spd are NA, sensor ID', sf_2022_npmrds_2025$sf_id[i]))
   } else {
     sf_2022_npmrds_2025$amavgspd_sf[i] = mean(spdarray_am, na.rm = T)
-    sf_2022_npmrds_2025$amavgvol_sf[i] = mean(volarray_am, na.rm = T)
+    sf_2022_npmrds_2025$amavgvol_sf[i] = mean(volarray_am, na.rm = T) * 1.1
   }
   
   # get all pm data from vol per day
@@ -120,8 +123,9 @@ for (i in 1:nrow(sf_2022_npmrds_2025)) {
   spdarray_pm = allNA_returnNA(t(link_i[,pmspdcol])) 
   if (all(is.na(c(volarray_pm))) | all(is.na(spdarray_pm))) {
     print(paste('All PM vol & spd are NA, sensor ID', sf_2022_npmrds_2025$sf_id[i]))
-  } else {sf_2022_npmrds_2025$pmavgspd_sf[i] = mean(spdarray_pm, na.rm = T)
-  sf_2022_npmrds_2025$pmavgvol_sf[i] = mean(volarray_pm, na.rm = T)
+  } else {
+    sf_2022_npmrds_2025$pmavgspd_sf[i] = mean(spdarray_pm, na.rm = T)
+    sf_2022_npmrds_2025$pmavgvol_sf[i] = mean(volarray_pm, na.rm = T) * 1.1
   }
   
   # get all amop data from vol per day
@@ -131,7 +135,7 @@ for (i in 1:nrow(sf_2022_npmrds_2025)) {
     print(paste('All OP vol & spd are NA, sensor ID', sf_2022_npmrds_2025$sf_id[i]))
   } else {
     sf_2022_npmrds_2025$amopavgspd_sf[i] = mean(spdarray_amop, na.rm = T)
-    sf_2022_npmrds_2025$amopavgvol_sf[i] = mean(volarray_amop, na.rm = T)
+    sf_2022_npmrds_2025$amopavgvol_sf[i] = mean(volarray_amop, na.rm = T) * 1.1
   }
   
   # get all pmop data from vol per day
@@ -141,7 +145,7 @@ for (i in 1:nrow(sf_2022_npmrds_2025)) {
     print(paste('All OP vol & spd are NA, sensor ID', sf_2022_npmrds_2025$sf_id[i]))
   } else {
     sf_2022_npmrds_2025$pmopavgspd_sf[i] = mean(spdarray_pmop, na.rm = T)
-    sf_2022_npmrds_2025$pmopavgvol_sf[i] = mean(volarray_pmop, na.rm = T)
+    sf_2022_npmrds_2025$pmopavgvol_sf[i] = mean(volarray_pmop, na.rm = T) * 1.1
   }
   
   ## finally, match avg speed from npm
@@ -151,52 +155,59 @@ for (i in 1:nrow(sf_2022_npmrds_2025)) {
   sf_2022_npmrds_2025$pmopavgspd_npm[i] = as.numeric(npmrds_feb2024$Avg_Speed_21_23[which(npmrds_feb2024$TMC == sf_2022_npmrds_2025$TMC_npm[i])])
 }
 
-## delete rows that do not find matched vol spd
-# sf_2022_npmrds_2025 = sf_2022_npmrds_2025[-row_to_delete,] # run every time when sf_npmrds matching performs
+#### delete rows that do not find matched vol spd, 782 remains (??)
+## run every time when sf_npmrds matching performs
+# sf_2022_npmrds_2025 = sf_2022_npmrds_2025[-row_to_delete,] 
 
-# delete extremely large vol
+## calculate spd diff (SF - NPM)
+sf_2022_npmrds_2025$amspddiff = sf_2022_npmrds_2025$amavgspd_sf - sf_2022_npmrds_2025$amavgspd_npm
+sf_2022_npmrds_2025$pmspddiff = sf_2022_npmrds_2025$pmavgspd_sf - sf_2022_npmrds_2025$pmavgspd_npm
+sf_2022_npmrds_2025$amopspddiff = sf_2022_npmrds_2025$amopavgspd_sf - sf_2022_npmrds_2025$amopavgspd_npm
+sf_2022_npmrds_2025$pmopspddiff = sf_2022_npmrds_2025$pmopavgspd_sf - sf_2022_npmrds_2025$pmopavgspd_npm
+
+## convert columns to numeric
+for (i in 7:34) {
+  sf_2022_npmrds_2025[,i] = as.numeric(sf_2022_npmrds_2025[,i])
+}
+
+#### delete extremely large vol
+## run every time when sf_npmrds matching performs
 row_to_delete = which(sf_2022_npmrds_2025$amavgvol_sf/sf_2022_npmrds_2025$amlane > 2500 |
                         sf_2022_npmrds_2025$pmavgvol_sf/sf_2022_npmrds_2025$pmlane > 2500 |
                         sf_2022_npmrds_2025$amopavgvol_sf/sf_2022_npmrds_2025$amoplane > 2500 |
                         sf_2022_npmrds_2025$pmopavgvol_sf/sf_2022_npmrds_2025$pmoplane > 2500)
-## sf_2022_npmrds_2025 = sf_2022_npmrds_2025[-row_to_delete,] # run every time when sf_npmrds matching performs # 1127 remaining
-
-## convert columns to numeric
-for (i in 6:33) {
-  sf_2022_npmrds_2025[,i] = as.numeric(sf_2022_npmrds_2025[,i])
+if (length(row_to_delete) > 0) {
+  sf_2022_npmrds_2025 = sf_2022_npmrds_2025[-row_to_delete,] # run every time when sf_npmrds matching performs
 }
 
 ## clean environment 
-rm(amspdcol,amvolcol, pmspdcol,pmvolcol, opspdcol,opvolcol, row_to_delete, 
-   volarray_am, volarray_pm, volarray_amop, volarray_pmop, spdarray_am, spdarray_pm, spdarray_amop, spdarray_pmop, link_i)
+rm(amspdcol,amvolcol, pmspdcol,pmvolcol, amopspdcol, amopvolcol, pmopspdcol, pmopvolcol,row_to_delete, 
+   volarray_am, volarray_pm, volarray_amop, volarray_pmop, spdarray_am, spdarray_pm, spdarray_amop, spdarray_pmop, 
+   link_i, a, b, i, sidefire_ID, tmc_npmrds, weavetype)
 
 # export sf_2022_npmrds_2025 & map in ArcGIS
-write.csv(sf_2022_npmrds_2025, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\sf_2022_npmrds_2024.csv', row.names = F)
+write.csv(sf_2022_npmrds_2025, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\sf_2022_npmrds_2024_FebWorkday.csv', row.names = F)
 
 ################## compare npm & sf spd side-by-side ###############
 ## am
-sf_2022_npmrds_2025$amspddiff = sf_2022_npmrds_2025$amavgspd_sf - sf_2022_npmrds_2025$amavgspd_npm
 ggplot(sf_2022_npmrds_2025, aes(x = amspddiff)) + geom_histogram(bins = 15, fill = 'lightblue', color = 'white', linewidth = 0.5) +
   xlab('Speed Difference (SideFire - NPMRDS)') + ylab('Frequency') + 
   labs(title = 'AM average speed difference between sidefire and NMPRDS') +
   theme_black() 
 
 ## pm
-sf_2022_npmrds_2025$pmspddiff = sf_2022_npmrds_2025$pmavgspd_sf - sf_2022_npmrds_2025$pmavgspd_npm
 ggplot(sf_2022_npmrds_2025, aes(x = pmspddiff)) + geom_histogram(bins = 15, fill = 'lightblue', color = 'white', linewidth = 0.5) +
   xlab('Speed Difference (SideFire - NPMRDS)') + ylab('Frequency') + 
   labs(title = 'PM average speed difference between sidefire and NMPRDS') +
   theme_black()
 
 ## am op
-sf_2022_npmrds_2025$amopspddiff = sf_2022_npmrds_2025$amopavgspd_sf - sf_2022_npmrds_2025$amopavgspd_npm
 ggplot(sf_2022_npmrds_2025, aes(x = amopspddiff)) + geom_histogram(bins = 15, fill = 'lightblue', color = 'white', linewidth = 0.5) +
   xlab('Speed Difference (SideFire - NPMRDS)') + ylab('Frequency') + 
   labs(title = 'AM OP average speed difference between sidefire and NMPRDS') +
   theme_black() 
 
 ## pm op
-sf_2022_npmrds_2025$pmopspddiff = sf_2022_npmrds_2025$pmopavgspd_sf - sf_2022_npmrds_2025$pmopavgspd_npm
 ggplot(sf_2022_npmrds_2025, aes(x = pmopspddiff)) + geom_histogram(bins = 15, fill = 'lightblue', color = 'white', linewidth = 0.5) +
   xlab('Speed Difference (SideFire - NPMRDS)') + ylab('Frequency') + 
   labs(title = 'PM OP average speed difference between sidefire and NMPRDS') +
@@ -204,7 +215,8 @@ ggplot(sf_2022_npmrds_2025, aes(x = pmopspddiff)) + geom_histogram(bins = 15, fi
 
 
 ######################### re-organize sf_2022_npmrds_2025 as a dataframe for ggplot ##############
-sf_2022_npmrds_2025_plot = matrix(0, nrow = 0, ncol = 11)
+## updated May 09, vol has been scaled up to 1.1
+sf_2022_npmrds_2025_plot = matrix(0, nrow = 0, ncol = 12)
 for (i in 1:nrow(sf_2022_npmrds_2025)) {
   sf_am = c('sf','am',
             sf_2022_npmrds_2025$amlane[i], sf_2022_npmrds_2025$amffspd[i], sf_2022_npmrds_2025$amhrcap[i],
@@ -235,139 +247,219 @@ for (i in 1:nrow(sf_2022_npmrds_2025)) {
              sf_2022_npmrds_2025$pmopavgspd_npm[i], sf_2022_npmrds_2025$pmopavgvol_sf[i])
   
   sf_2022_npmrds_2025_plot = rbind(sf_2022_npmrds_2025_plot,
-                                   cbind(sf_2022_npmrds_2025$sf_id[i], sf_2022_npmrds_2025$rdwy_id[i], 
-                                         sf_2022_npmrds_2025$TMC_sf[i], sf_2022_npmrds_2025$weavetype[i],
+                                   cbind(sf_2022_npmrds_2025$sf_id[i], sf_2022_npmrds_2025$rdwy_id[i], sf_2022_npmrds_2025$TMC_sf[i], 
+                                         sf_2022_npmrds_2025$weavetype[i], sf_2022_npmrds_2025$areatype[i],
                                          rbind(sf_am, npm_am, sf_pm, npm_pm, sf_amop, npm_amop, sf_pmop, npm_pmop)))
 }
 ## format as data frame, name cols, and convert to numeric
 sf_2022_npmrds_2025_plot = data.frame(sf_2022_npmrds_2025_plot)
-colnames(sf_2022_npmrds_2025_plot) = c('sf_id', 'rdwy_id', 'TMC','weavetype', 'source','time','lane','ffspd','hrcap','avgspd','avgvol')
-for (i in 7:11) {
+colnames(sf_2022_npmrds_2025_plot) = c('sf_id', 'rdwy_id', 'TMC','weavetype', 'areatype', 'source','time','lane','ffspd','hrcap','avgspd','avgvol')
+for (i in 8:12) {
   sf_2022_npmrds_2025_plot[,i] = as.numeric(sf_2022_npmrds_2025_plot[,i])
 }
 
-#################################### plot speed comparison by time period ###########################################
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/Sidefire_NPMRDS_SpdDiff_AM.png", 
+## clean environment
+rm(amopspdcol,pmopspdcol,amopvolcol,pmopvolcol,i,npm_am,npm_amop,npm_pm,npm_pmop,sf_am,sf_amop,sf_pm,sf_pmop)
+
+#################################### plot speed comparison by time period and weave type ###########################################
+library(Metrics)
+library(ModelMetrics)
+
+## AM frwybasic
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/Sidefire_NPMRDS_SpdDiff_AM_Frwybasic.png", 
     width = 800, height = 600)
-ggplot(sf_2022_npmrds_2025,
-       aes(x = as.numeric(amavgspd_sf), y = as.numeric(amavgspd_npm))) + 
+
+label_text <- paste0(
+  "No. Obs: ", length(which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')), "\n",
+  "% Error: ", round((sum(sf_2022_npmrds_2025$amavgspd_sf[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]) - 
+                  sum(sf_2022_npmrds_2025$amavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]))/
+    sum(sf_2022_npmrds_2025$amavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]) * 100, 2), '%', "\n",
+  
+  "RMSE: ", round(rmse(sf_2022_npmrds_2025$amavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')], 
+                   sf_2022_npmrds_2025$amavgspd_sf[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]),2), '\n',
+  
+  "% RSQ: ", round(summary(
+    lm(amavgspd_sf ~ amavgspd_npm, data= sf_2022_npmrds_2025[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC'),]))$r.squared * 100, 2), '%'
+)
+
+ggplot(sf_2022_npmrds_2025[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC'),],
+       aes(x = as.numeric(amavgspd_npm), y = as.numeric(amavgspd_sf))) + 
   geom_point(color = '#B3E5FC', size = 2) +
   geom_abline(intercept = 0, slope = 1, color = 'yellow', linewidth = 1.5) +
-  xlab('SideFire Speed (MPH)') + ylab('NPMRDS Speed (MPH)') + 
+  xlab('NPMRDS Speed (MPH)') + ylab('SideFire Speed (MPH)') + 
   coord_cartesian(ylim = c(0, 85), xlim = c(0,85)) + 
-  labs(title = 'AM Speed side-by-side comparison, SideFire vs. NPMRDS') +
+  labs(title = 'AM Speed Freeway Basic, SideFire vs. NPMRDS') +
+  annotate_stats(label_text) +
   theme_black() # 👈 Use your custom theme here
 dev.off()
 
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/Sidefire_NPMRDS_SpdDiff_PM.png", 
+## PM frwybasic
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/Sidefire_NPMRDS_SpdDiff_PM_Frwybasic.png", 
     width = 800, height = 600)
+label_text <- paste0(
+  "No. Obs: ", length(which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')), "\n",
+  "% Error: ", round((sum(sf_2022_npmrds_2025$pmavgspd_sf[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]) - 
+                        sum(sf_2022_npmrds_2025$pmavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]))/
+                       sum(sf_2022_npmrds_2025$pmavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]) * 100, 2), '%', "\n",
+  
+  "RMSE: ", round(rmse(sf_2022_npmrds_2025$pmavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')], 
+                       sf_2022_npmrds_2025$pmavgspd_sf[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]),2), '\n',
+  
+  "% RSQ: ", round(summary(
+    lm(pmavgspd_sf ~ pmavgspd_npm, data= sf_2022_npmrds_2025[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC'),]))$r.squared * 100, 2), '%'
+)
+
 ggplot(sf_2022_npmrds_2025,
-       aes(x = as.numeric(pmavgspd_sf), y = as.numeric(pmavgspd_npm))) + 
+       aes(x = as.numeric(pmavgspd_npm), y = as.numeric(pmavgspd_sf))) + 
   geom_point(color = '#B3E5FC', size = 2) +
   geom_abline(intercept = 0, slope = 1, color = 'yellow', linewidth = 1.5) +
-  xlab('SideFire Speed (MPH)') + ylab('NPMRDS Speed (MPH)') + 
+  xlab('NPMRDS Speed (MPH)') + ylab('SideFire Speed (MPH)') + 
   coord_cartesian(ylim = c(0, 85), xlim = c(0,85)) + 
-  labs(title = 'PM Speed side-by-side comparison, SideFire vs. NPMRDS') +
+  labs(title = 'PM Speed Freeway Basic, SideFire vs. NPMRDS') +
+  annotate_stats(label_text) +
   theme_black()
 dev.off()
 
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/Sidefire_NPMRDS_SpdDiff_PMOP.png", 
+## pmop frwybasic
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/Sidefire_NPMRDS_SpdDiff_PMOP_Frwybasic.png", 
     width = 800, height = 600)
+label_text <- paste0(
+  "No. Obs: ", length(which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')), "\n",
+  "% Error: ", round((sum(sf_2022_npmrds_2025$pmopavgspd_sf[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]) - 
+                        sum(sf_2022_npmrds_2025$pmopavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]))/
+                       sum(sf_2022_npmrds_2025$pmopavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]) * 100, 2), '%', "\n",
+  
+  "RMSE: ", round(rmse(sf_2022_npmrds_2025$pmopavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')], 
+                       sf_2022_npmrds_2025$pmopavgspd_sf[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]),2), '\n',
+  
+  "% RSQ: ", round(summary(
+    lm(pmopavgspd_sf ~ pmopavgspd_npm, data= sf_2022_npmrds_2025[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC'),]))$r.squared * 100, 2), '%'
+)
+
 ggplot(sf_2022_npmrds_2025,
-       aes(x = as.numeric(pmopavgspd_sf), y = as.numeric(pmopavgspd_npm))) + 
+       aes(x = as.numeric(pmopavgspd_npm), y = as.numeric(pmopavgspd_sf))) + 
   geom_point(color = '#B3E5FC', size = 2) +
   geom_abline(intercept = 0, slope = 1, color = 'yellow', linewidth = 1.5) +
-  xlab('SideFire Speed (MPH)') + ylab('NPMRDS Speed (MPH)') + 
+  xlab('NPMRDS Speed (MPH)') + ylab('SideFire Speed (MPH)') + 
   coord_cartesian(ylim = c(0, 85), xlim = c(0,85)) + 
-  labs(title = 'Night (9-11pm) Speed side-by-side comparison, SideFire vs. NPMRDS') +
+  labs(title = '9-11PM Speed Freeway Basic, SideFire vs. NPMRDS') +
+  annotate_stats(label_text) +
   theme_black()
 dev.off()
 
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/Sidefire_NPMRDS_SpdDiff_AMOP.png", 
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/Sidefire_NPMRDS_SpdDiff_AMOP_Frwybasic.png", 
     width = 800, height = 600)
+label_text <- paste0(
+  "No. Obs: ", length(which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')), "\n",
+  "% Error: ", round((sum(sf_2022_npmrds_2025$amopavgspd_sf[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]) - 
+                        sum(sf_2022_npmrds_2025$amopavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]))/
+                       sum(sf_2022_npmrds_2025$amopavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]) * 100, 2), '%', "\n",
+  
+  "RMSE: ", round(rmse(sf_2022_npmrds_2025$amopavgspd_npm[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')], 
+                       sf_2022_npmrds_2025$amopavgspd_sf[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC')]),2), '\n',
+  
+  "% RSQ: ", round(summary(
+    lm(amopavgspd_sf ~ amopavgspd_npm, data= sf_2022_npmrds_2025[which(sf_2022_npmrds_2025$weavetype == 'FRWY_BASIC'),]))$r.squared * 100, 2), '%'
+)
 ggplot(sf_2022_npmrds_2025,
-       aes(x = as.numeric(amopavgspd_sf), y = as.numeric(amopavgspd_npm))) + 
+       aes(x = as.numeric(amopavgspd_npm), y = as.numeric(amopavgspd_sf))) + 
   geom_point(color = '#B3E5FC', size = 2) +
   geom_abline(intercept = 0, slope = 1, color = 'yellow', linewidth = 1.5) +
-  xlab('SideFire Speed (MPH)') + ylab('NPMRDS Speed (MPH)') + 
+  xlab('NPMRDS Speed (MPH)') + ylab('SideFire Speed (MPH)') + 
   coord_cartesian(ylim = c(0, 85), xlim = c(0,85)) + 
-  labs(title = 'Morning (3-5am) Speed side-by-side comparison, SideFire vs. NPMRDS') +
+  labs(title = '3-5AM Speed Freeway Basic, SideFire vs. NPMRDS') +
+  annotate_stats(label_text) +
   theme_black()
 dev.off()
 
 
-#################################### plot VC ratio vs Speed by data source ########################################
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Spd, PK by data source sf.png", 
+#################################### plot VC ratio vs Speed by data source, use model cap, use NPMRDS speed only ########################################
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VCratio vs Spd, PK by data source npm_Frwybasic.png", 
     width = 800, height = 600)
 ggplot(sf_2022_npmrds_2025_plot[which(sf_2022_npmrds_2025_plot$time != 'amop' &
                                         sf_2022_npmrds_2025_plot$time != 'pmop' &
-                                        sf_2022_npmrds_2025_plot$source == 'sf'),],
+                                        sf_2022_npmrds_2025_plot$source == 'npm' &
+                                        sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC'),],
        aes(x = as.numeric(avgvol)/as.numeric(hrcap), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
   xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85)) + 
-  labs(title = 'PK VC ratio vs Speed, from SideFire') +
+  labs(title = 'PK VC ratio vs Speed, FRWYBASIC') +
   theme_black()
 dev.off()
 
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Spd, PK by data source npm.png", 
-    width = 800, height = 600)
-ggplot(sf_2022_npmrds_2025_plot[which(sf_2022_npmrds_2025_plot$time != 'amop' &
-                                        sf_2022_npmrds_2025_plot$time != 'pmop' &
-                                        sf_2022_npmrds_2025_plot$source == 'npm'),],
-       aes(x = as.numeric(avgvol)/as.numeric(hrcap), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
-  xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85)) + 
-  labs(title = 'PK VC ratio vs Speed, from NPMRDS') +
-  theme_black()
-dev.off()
-
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Spd, OP by data source sf.png", 
-    width = 800, height = 600)
-ggplot(sf_2022_npmrds_2025_plot[which((sf_2022_npmrds_2025_plot$time == 'amop' |
-                                        sf_2022_npmrds_2025_plot$time == 'pmop') &
-                                        sf_2022_npmrds_2025_plot$source == 'sf'),],
-       aes(x = as.numeric(avgvol)/as.numeric(hrcap), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
-  xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85)) + 
-  labs(title = 'OP VC ratio vs Speed, from SideFire') +
-  theme_black()   
-
-png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/VCratio vs Spd, OP by data source npm.png", 
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VCratio vs Spd, OP by data source npm_Frwybasic.png", 
     width = 800, height = 600)
 ggplot(sf_2022_npmrds_2025_plot[which((sf_2022_npmrds_2025_plot$time == 'amop' |
                                          sf_2022_npmrds_2025_plot$time == 'pmop') &
-                                        sf_2022_npmrds_2025_plot$source == 'npm'),],
+                                        sf_2022_npmrds_2025_plot$source == 'npm' &
+                                        sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC'),],
        aes(x = as.numeric(avgvol)/as.numeric(hrcap), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
   xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85)) + 
-  labs(title = 'OP VC ratio vs Speed, from NMPRDS') +
+  labs(title = 'OP VC ratio vs Speed, FRWYBASIC') +
   theme_black()   
 dev.off()
 
 
+#################################### plot VC ratio vs Speed by weave type, use SF capacity, use NPMRDS speed ########################################
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VCratio vs Spd, PK by data source npm, cap from SF_Frwybasic.png", 
+    width = 800, height = 600)
+ggplot(sf_2022_npmrds_2025_plot[which(sf_2022_npmrds_2025_plot$time != 'amop' &
+                                        sf_2022_npmrds_2025_plot$time != 'pmop' &
+                                        sf_2022_npmrds_2025_plot$source == 'npm' &
+                                        sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC'),],
+       aes(x = as.numeric(avgvol)/as.numeric(sfcapperlane)/as.numeric(lane), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
+  xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85)) + 
+  labs(title = 'PK VC ratio vs Speed, FRWYBASIC') +
+  theme_black()
+dev.off()
 
-
-
-rm(npm_am, npm_pm, npm_op, sf_am, sf_pm, sf_op, row_to_delete, b, i)
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VCratio vs Spd, OP by data source npm, cap from SF_Frwybasic.png", 
+    width = 800, height = 600)
+ggplot(sf_2022_npmrds_2025_plot[which((sf_2022_npmrds_2025_plot$time == 'amop' |
+                                         sf_2022_npmrds_2025_plot$time == 'pmop') &
+                                        sf_2022_npmrds_2025_plot$source == 'npm' &
+                                        sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC'),],
+       aes(x = as.numeric(avgvol)/as.numeric(sfcapperlane)/as.numeric(lane), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
+  xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85)) + 
+  labs(title = 'OP VC ratio vs Speed, FRWYBASIC') +
+  theme_black()   
+dev.off()
 
 
 ################################ define a high contrast plot style, use this function in ggplot ################################
 # Define your custom black background theme # 👈 Use your custom theme here
-theme_black <- function(base_size = 16) {
+theme_black <- function(base_size = 20) {
   theme_minimal(base_size = base_size) +
     theme(
       panel.background = element_rect(fill = "black", color = NA),
       plot.background = element_rect(fill = "black", color = NA),
       panel.grid.major = element_line(color = "gray30"),
       panel.grid.minor = element_line(color = "gray20"),
-      text = element_text(color = "white"),
-      axis.line = element_line(color = "white", size = 1),  # Add axis lines
+      axis.line = element_line(color = "white", size = 1),
       axis.ticks = element_line(color = "white"),
-      axis.text = element_text(color = "white"),
-      axis.title = element_text(color = "white"),
+      
+      # Larger axis tick text
+      axis.text = element_text(color = "white", size = base_size + 2),
+      
+      # Larger, bold axis titles
+      axis.title = element_text(color = "white", size = base_size + 4, face = "bold"),
+      
+      # Bold and large title, subtitle, and caption
+      plot.title = element_text(color = "white", size = base_size + 6, face = "bold"),
+      # plot.subtitle = element_text(color = "white", size = base_size + 3, face = "bold"),
+      # plot.caption = element_text(color = "white", size = base_size + 2),
+      
+      # Legend styling
       legend.background = element_rect(fill = "black"),
       legend.key = element_rect(fill = "black"),
-      legend.text = element_text(color = "white"),
-      legend.title = element_text(color = "white")
+      legend.text = element_text(color = "white", size = base_size),
+      legend.title = element_text(color = "white", face = "bold", size = base_size + 2)
     )
 }
 
+annotate_stats <- function(label) {
+  annotate("text", x = Inf, y = 0, hjust = 1, vjust = 0,
+           label = label, color = "white", size = 8, fontface = "bold")
+}
 
 ################################### comment out sessions ################################################
 ## including: keep records where ffspd > spd; re-organize weave type and write to csv to compare capacity & vol. 

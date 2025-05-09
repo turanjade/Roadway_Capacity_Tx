@@ -11,22 +11,44 @@ setwd("C:\\Users\\rtu\\OneDrive - The North Central Texas Council of Governments
 
 ########################################### vol_per_day, 15min count #############################################
 ########################################### vol_per_day, 15min count #############################################
-# vol_per_day_2022 = read.csv('20250410_capacity_recalculation/Database/vol_per_day_2022.csv', header = T)
-# vol_per_day_2022 = vol_per_day_2022[which(vol_per_day_2022$Year == 2022),] # only Y2022 records selected
-# vol_per_day_2022_raw = vol_per_day_2022
+# vol_per_day_2022_raw = read.csv('20250410_capacity_recalculation/Database/vol_per_day_2022.csv', header = T)
+# vol_per_day_2022_raw = vol_per_day_2022_raw[which(vol_per_day_2022_raw$Year == 2022),] # only Y2022 records selected
 
-# in vol_per_day_2022, the data is hourly records. for example, volume_0_00 means the count from 12am to 1am, volume_0_15 means the count from 12:15am to 1:15am; the same for speed
-# check with vol_per_day 2022. Keep only Records_Per_Lane between 250 and 288, 
+## in vol_per_day_2022, the data is hourly records. for example, volume_0_00 means the count from 12am to 1am, volume_0_15 means the count from 12:15am to 1:15am; the same for speed
+## check with vol_per_day 2022. Keep only Records_Per_Lane between 250 and 288, 
 # vol_per_day_2022 = vol_per_day_2022_raw[which(vol_per_day_2022_raw$Records_Per_Lane >= 250 &
 #                                                vol_per_day_2022_raw$Records_Per_Lane <= 288),]
-# delete all dups if sensors ID & recorded data are exactly the same
+## delete all dups if sensors ID & recorded data are exactly the same
 # vol_per_day_2022$sensor_date_merge = paste(vol_per_day_2022$LinkID, vol_per_day_2022$Month, vol_per_day_2022$Date, sep = '_')
 # vol_per_day_2022 = vol_per_day_2022[!duplicated(vol_per_day_2022$sensor_date_merge) & 
 #                                      !duplicated(vol_per_day_2022$sensor_date_merge, fromLast = TRUE),]
-# only select Tuesday, Wednesday & Thursday
-# vol_per_day_2022 = vol_per_day_2022[which(vol_per_day_2022$DOW == 3 | vol_per_day_2022$DOW == 4 | vol_per_day_2022$DOW == 5),]
+## only select Tuesday, Wednesday & Thursday
+# vol_per_day_2022_workday = vol_per_day_2022[which(vol_per_day_2022$DOW == 3 | vol_per_day_2022$DOW == 4 | vol_per_day_2022$DOW == 5),]
 
 # aggregate linkID in the detector file. Each row represents the count statistics (min, 15%, Q1 (25%), mean, 50%, Q3 (75%), 85%, 90%, 95%, 97.5%, 98%, 99%, max) & its corresponding at peak hours
+
+######################## filter out records in vol_per_day_2022_raw of which sensor ID matches #############
+sidefire_ID = unique(sidefire_linkmatch_frwy_2025$sf_id)
+
+# instead of appending, first select rows from vol_per_day data, then select the data of corresponding row --> fasten the process
+## use processed vol_per_day_2022 instead of XX_raw (keep reasonable records_per_lane & delete dups)
+row_to_select = array(0, dim = 0)
+for (i in 1:length(sidefire_ID)) {
+  row_to_select = c(row_to_select, which(vol_per_day_2022$LinkID == sidefire_ID[i]))
+}
+
+vol_per_day_2022_linkmatch = vol_per_day_2022[row_to_select,] # 956 detectors in 2022 hourly count match with the roadlink & 2025 detector location
+rm(row_to_select)
+
+# select workday, Tuesday, Wednesday, Thursday & February (matches with npmrds data), 956 remains
+vol_per_day_2022_feb_workday = vol_per_day_2022_linkmatch[which((vol_per_day_2022_linkmatch$DOW == 3 |
+                                                                   vol_per_day_2022_linkmatch$DOW == 4 |
+                                                                   vol_per_day_2022_linkmatch$DOW == 5) & 
+                                                                  vol_per_day_2022_linkmatch$Month == 2),] # select Feb workday records, 956 detectors
+
+vol_per_day_2022_workday = vol_per_day_2022_linkmatch[which((vol_per_day_2022_linkmatch$DOW == 3 |
+                                                               vol_per_day_2022_linkmatch$DOW == 4 |
+                                                               vol_per_day_2022_linkmatch$DOW == 5)),] # select Feb workday records, 956 detectors
 
 ########################################### AM, count col 46-55, spd col 139-148 #############################################
 ########################################### AM, count col 46-55, spd col 139-148 #############################################
@@ -63,7 +85,7 @@ missingsensors = matrix(0, nrow = 0, ncol = 2)
 
 # select AM 
 for (i in 1:nrow(sidefire_vol_spd_2022_am)) {
-  link_i = vol_per_day_2022[which(vol_per_day_2022$LinkID == sidefire_vol_spd_2022_am$ID_detector[i]),]
+  link_i = vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == sidefire_vol_spd_2022_am$ID_detector[i]),]
   
   # if the number of link is 0, skip
   if (nrow(link_i) == 0) {
@@ -157,7 +179,7 @@ missingsensors = matrix(0, nrow = 0, ncol = 2)
 
 # select PM
 for (i in 1:nrow(sidefire_vol_spd_2022_pm)) {
-  link_i = vol_per_day_2022[which(vol_per_day_2022$LinkID == sidefire_vol_spd_2022_pm$ID_detector[i]),]
+  link_i = vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == sidefire_vol_spd_2022_pm$ID_detector[i]),]
   
   # if the number of link is 0, skip
   if (nrow(link_i) == 0) {
@@ -258,7 +280,7 @@ missingsensors = matrix(0, nrow = 0, ncol = 2)
 
 volcol = c(seq(20,45),seq(56,79),seq(95,112)); spdcol = c(seq(113,138),seq(149,172),seq(188,205))
 for (i in 1:nrow(sidefire_vol_spd_2022_op)) {
-  link_i = vol_per_day_2022[which(vol_per_day_2022$LinkID == sidefire_vol_spd_2022_op$ID_detector[i]),]
+  link_i = vol_per_day_2022_workday[which(vol_per_day_2022_workday$LinkID == sidefire_vol_spd_2022_op$ID_detector[i]),]
   
   # if the number of link is 0, skip
   if (nrow(link_i) == 0) {
@@ -324,26 +346,26 @@ for (i in 1:nrow(sidefire_vol_spd_2022_op)) {
 
 ########################################### add weavetype & capacity & lanes & ffspd to each record for plot #############################################
 ########################################### add weavetype & capacity & lanes & ffspd to each record for plot #############################################
-# select a typical month April because no holidays
-vol_per_day_2022_04 = vol_per_day_2022[which(vol_per_day_2022$Month == 4),]
-for (i in 1:nrow(vol_per_day_2022_04)) {
-  link_i = sidefire_linkmatch_frwy_2025[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_04$LinkID[i]),]
+## (do not select) select a typical month April because no holidays 
+# vol_per_day_2022_workday_04 = vol_per_day_2022_workday[which(vol_per_day_2022_workday$Month == 4),]
+for (i in 1:nrow(vol_per_day_2022_workday)) {
+  link_i = sidefire_linkmatch_frwy_2025[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_workday$LinkID[i]),]
   if (nrow(link_i) == 0) {
     next
   }
-  vol_per_day_2022_04$weavetype[i] = link_i$weavetype
+  vol_per_day_2022_workday$weavetype[i] = link_i$weavetype
  
-  vol_per_day_2022_04$amlane[i] = link_i$amlane
-  vol_per_day_2022_04$pmlane[i] = link_i$pmlane
-  vol_per_day_2022_04$oplane[i] = link_i$oplane
+  vol_per_day_2022_workday$amlane[i] = link_i$amlane
+  vol_per_day_2022_workday$pmlane[i] = link_i$pmlane
+  vol_per_day_2022_workday$oplane[i] = link_i$oplane
   
-  vol_per_day_2022_04$amhrcap[i] = link_i$amhrcap
-  vol_per_day_2022_04$pmhrcap[i] = link_i$pmhrcap
-  vol_per_day_2022_04$ophrcap[i] = link_i$ophrcap
+  vol_per_day_2022_workday$amhrcap[i] = link_i$amhrcap
+  vol_per_day_2022_workday$pmhrcap[i] = link_i$pmhrcap
+  vol_per_day_2022_workday$ophrcap[i] = link_i$ophrcap
   
-  vol_per_day_2022_04$amffspd[i] = link_i$amffspd
-  vol_per_day_2022_04$pmffspd[i] = link_i$pmffspd
-  vol_per_day_2022_04$opffspd[i] = link_i$opffspd
+  vol_per_day_2022_workday$amffspd[i] = link_i$amffspd
+  vol_per_day_2022_workday$pmffspd[i] = link_i$pmffspd
+  vol_per_day_2022_workday$opffspd[i] = link_i$opffspd
 }
 
 
