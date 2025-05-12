@@ -22,100 +22,6 @@
 # vol_per_day_2022 = vol_per_day_2022[!duplicated(vol_per_day_2022$sensor_date_merge) & 
 #                                      !duplicated(vol_per_day_2022$sensor_date_merge, fromLast = TRUE),] # 1322 link ID remains
 
-
-####################################### Get max stats value of volume & corresponding spd #######################################
-
-sidefire_vol_spd_2022 = data.frame(cbind(sidefire_linkmatch_frwy_2025$sf_id, sidefire_linkmatch_frwy_2025$rdwy_id,
-                                         sidefire_linkmatch_frwy_2025$TMC, sidefire_linkmatch_frwy_2025$weavetype, 
-                                         sidefire_linkmatch_frwy_2025$areatype,
-                                         sidefire_linkmatch_frwy_2025$amffspd, 
-                                         sidefire_linkmatch_frwy_2025$amlane, 
-                                         sidefire_linkmatch_frwy_2025$amhrcap))
-
-colnames(sidefire_vol_spd_2022) = c('ID_detector', 'ID_Road', 'TMC', 'weavetype','areatype','ffspd','lane','hrcap')
-
-sidefire_vol_spd_2022$vol90 = 0; sidefire_vol_spd_2022$vol95 = 0; 
-sidefire_vol_spd_2022$vol975 = 0; sidefire_vol_spd_2022$vol99 = 0; 
-sidefire_vol_spd_2022$volmax = 0; sidefire_vol_spd_2022$volboxupper = 0
-
-sidefire_vol_spd_2022$spd90 = 0; sidefire_vol_spd_2022$spd95 = 0; 
-sidefire_vol_spd_2022$spd975 = 0; sidefire_vol_spd_2022$spd99 = 0; 
-sidefire_vol_spd_2022$spdmax = 0; sidefire_vol_spd_2022$spdboxupper = 0
-
-missingsensors = matrix(0, nrow = 0, ncol = 2)
-volcol = seq(20,112); spdcol = seq(113, 205)
-for (i in 1:nrow(sidefire_vol_spd_2022)) {
-  link_i = vol_per_day_2022_linkmatch[which(vol_per_day_2022_linkmatch$LinkID == sidefire_vol_spd_2022$ID_detector[i]),]
-  
-  # if the number of link is 0, skip
-  if (nrow(link_i) == 0) {
-    print(paste('Sensors ID', sidefire_linkmatch_frwy_2025$sf_id[i],'not found',' row',i))
-    missingsensors = rbind(missingsensors, c(i, sidefire_linkmatch_frwy_2025$sf_id[i]))
-    next
-  }
-  
-  # choose corresponding volume 
-  volarray_i = allNA_returnNA(t(link_i[,volcol])) 
-  spdarray_i = allNA_returnNA(t(link_i[,spdcol])) 
-  if (all(is.na(c(volarray_i))) | all(is.na(spdarray_i))) {
-    print(paste('All qualified vol & spd are NA, sensor ID', link_i$LinkID[1]))
-    next
-  }
-  
-  # we already chose records under spdff, vol and spd are already in the same order, so we don't have to change
-  sidefire_vol_spd_2022$vol90[i] = quantile(volarray_i, na.rm = T, 0.90) * 1.1
-  q90Index = getIndex(volarray_i,sidefire_vol_spd_2022$vol90[i]/1.1) # need to scale down because the original data has systematic error
-  
-  sidefire_vol_spd_2022$vol95[i] = quantile(volarray_i, na.rm = T, 0.95) * 1.1
-  q95Index = getIndex(volarray_i,sidefire_vol_spd_2022$vol95[i]/1.1) # need to scale down because the original data has systematic error
-  
-  sidefire_vol_spd_2022$vol975[i] = quantile(volarray_i, na.rm = T, 0.975) * 1.1
-  q975Index = getIndex(volarray_i,sidefire_vol_spd_2022$vol975[i]/1.1) # need to scale down because the original data has systematic error
-  
-  sidefire_vol_spd_2022$vol99[i] = quantile(volarray_i, na.rm = T, 0.99) * 1.1
-  q99Index = getIndex(volarray_i,sidefire_vol_spd_2022$vol99[i]/1.1) # need to scale down because the original data has systematic error
-  
-  sidefire_vol_spd_2022$volmax[i] = max(volarray_i, na.rm = T) * 1.1
-  maxIndex = getIndex(volarray_i,sidefire_vol_spd_2022$volmax[i]/1.1) # need to scale down because the original data has systematic error
-  
-  sidefire_vol_spd_2022$volboxupper[i] = min(quantile(volarray_i, na.rm = T, 0.75) + 
-                                               1.5*(quantile(volarray_i, na.rm = T, 0.75) - quantile(volarray_i, na.rm = T, 0.25)), 
-                                             sidefire_vol_spd_2022$volmax[i]) * 1.1
-  boxupperIndex = getIndex(volarray_i,sidefire_vol_spd_2022$volboxupper[i]/1.1) # need to scale down because the original data has systematic error
-  
-  # speed stats from sidefire detector, vol_per_day which takes records per 15-minute interval
-  sidefire_vol_spd_2022$spd90[i] = mean(spdarray_i[q90Index])
-  sidefire_vol_spd_2022$spd95[i] = mean(spdarray_i[q95Index])
-  sidefire_vol_spd_2022$spd975[i] = mean(spdarray_i[q975Index])
-  sidefire_vol_spd_2022$spd99[i] = mean(spdarray_i[q99Index])
-  sidefire_vol_spd_2022$spdmax[i] = mean(spdarray_i[maxIndex])
-  sidefire_vol_spd_2022$spdboxupper[i] = mean(spdarray_i[boxupperIndex])
-}
-
-## only 956 links can be matched
-sidefire_vol_spd_2022 = sidefire_vol_spd_2022[-as.numeric(missingsensors[,1]),]
-
-sidefire_vol_spd_2022 = data.frame(sidefire_vol_spd_2022)
-## convert all values to numeric
-for (i in 6:20) {
-  sidefire_vol_spd_2022[,i] = as.numeric(sidefire_vol_spd_2022[,i])
-}
-
-
-library('openxlsx')
-# write.xlsx(sidefire_vol_spd_2022, '20250410_capacity_recalculation\\RoadNetwork_2026\\Sensor_count\\05072025_sidefire_vol_spd_2022_stats.xlsx', 
-#           rowNames = F)
-
-rm(boxupperIndex, maxIndex, q90Index, q95Index, q975Index, q99Index, spdcol, volcol, wb, spdarray_i, volarray_i, missingsensors, link_i, i)
-
-################################################## make summary table for different weave types ####################
-## calculate per lane vol & capacity
-sidefire_vol_spd_2022$hrcapperlane = sidefire_vol_spd_2022$hrcap/sidefire_vol_spd_2022$lane
-sidefire_vol_spd_2022$vol90perlane = sidefire_vol_spd_2022$vol90/sidefire_vol_spd_2022$lane
-sidefire_vol_spd_2022$vol95perlane = sidefire_vol_spd_2022$vol95/sidefire_vol_spd_2022$lane
-sidefire_vol_spd_2022$volmaxperlane = sidefire_vol_spd_2022$volmax/sidefire_vol_spd_2022$lane
-sidefire_vol_spd_2022$volboxupperperlane = sidefire_vol_spd_2022$volboxupper/sidefire_vol_spd_2022$lane
-
 ## create summary tables for available weave types, starting from FRWY_BASIC
 ## each column represents different area types, rows represent vol95, volmax, volboxupper, capacity (perlane), count of selected links, count of records
 area_frwybasic = unique(sidefire_vol_spd_2022$areatype[which(sidefire_vol_spd_2022$weavetype == 'FRWY_BASIC')])
@@ -242,7 +148,8 @@ writeData(wb, 'arealookup', arealookup, rowNames = F, colNames = F)
 writeData(wb, 'overallsummary', sidefire_vol_spd_2022)
 saveWorkbook(wb, file = '20250410_capacity_recalculation\\RoadNetwork_2026\\Sensor_count\\05072025_sidefire_vol_spd_2022_stats.xlsx', overwrite = T)
 
-rm(sf_vol_spd_2022_summary_a, sf_vol_spd_2022_summary_basic, sf_vol_spd_2022_summary_frwybasic, sf_vol_spd_2022_summary_md)
+rm(sf_vol_spd_2022_summary_a, sf_vol_spd_2022_summary_basic, sf_vol_spd_2022_summary_frwybasic, sf_vol_spd_2022_summary_md,
+   area_a, area_basic, area_frwybasic, area_md, i, wb)
 
 
 ## create summary data for all area types, all weave types, volboxupperperlane
@@ -269,10 +176,10 @@ colnames(sf_vol_spd_summary_all) = c('weavetype', 'areatype', 'sfcapperlane')
 ## if Inf value of the specific weave * area type, we use model capacity
 sf_2022_npmrds_2025_plot$sfcapperlane = 0
 for (i in 1:nrow(sf_2022_npmrds_2025_plot)) {
-  if (length(which(is.infinite(sf_vol_spd_summary_all$sf_cap[which(sf_vol_spd_summary_all$weavetype == sf_2022_npmrds_2025_plot$weavetype[i] &
-                                                             sf_vol_spd_summary_all$areatype == sf_2022_npmrds_2025_plot$areatype[j])]))) == 0) {
+  if (length(which(is.infinite(sf_vol_spd_summary_all$sfcapperlane[which(sf_vol_spd_summary_all$weavetype == sf_2022_npmrds_2025_plot$weavetype[i] &
+                                                             sf_vol_spd_summary_all$areatype == sf_2022_npmrds_2025_plot$areatype[i])]))) == 0) {
     sf_2022_npmrds_2025_plot$sfcapperlane[i] = as.numeric(sf_vol_spd_summary_all$sfcapperlane[which(sf_vol_spd_summary_all$weavetype == sf_2022_npmrds_2025_plot$weavetype[i] &
-                                                                                                sf_vol_spd_summary_all$areatype == sf_2022_npmrds_2025_plot$areatype[j])])
+                                                                                                sf_vol_spd_summary_all$areatype == sf_2022_npmrds_2025_plot$areatype[i])])
   }
   else {
     sf_2022_npmrds_2025_plot$sfcapperlane[i] = sf_2022_npmrds_2025_plot$hrcap[i]/sf_2022_npmrds_2025_plot$lane[i]
@@ -281,6 +188,31 @@ for (i in 1:nrow(sf_2022_npmrds_2025_plot)) {
 
 rm(weavetype, areatype, i, j, m)
 
+#################################### plot VC ratio vs Speed by weave type, use SF capacity, use NPMRDS speed ########################################
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VCratio vs Spd, PK by data source npm, cap from SF_Frwybasic.png", 
+    width = 800, height = 600)
+ggplot(sf_2022_npmrds_2025_plot[which(sf_2022_npmrds_2025_plot$time != 'amop' &
+                                        sf_2022_npmrds_2025_plot$time != 'pmop' &
+                                        sf_2022_npmrds_2025_plot$source == 'npm' &
+                                        sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC'),],
+       aes(x = (as.numeric(avgvol)/as.numeric(lane))/as.numeric(sfcapperlane), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
+  xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85), xlim = c(0,1)) + 
+  labs(title = 'PK VC ratio vs Speed, FRWYBASIC') +
+  theme_black()
+dev.off()
+
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VCratio vs Spd, OP by data source npm, cap from SF_Frwybasic.png", 
+    width = 800, height = 600)
+ggplot(sf_2022_npmrds_2025_plot[which((sf_2022_npmrds_2025_plot$time == 'amop' |
+                                         sf_2022_npmrds_2025_plot$time == 'pmop') &
+                                        sf_2022_npmrds_2025_plot$source == 'npm' &
+                                        sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC'),],
+       aes(x = (as.numeric(avgvol)/as.numeric(lane))/as.numeric(sfcapperlane), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
+  xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85)) + 
+  labs(title = 'OP VC ratio vs Speed, FRWYBASIC') +
+  theme_black()   
+dev.off()
+
 
 ################################################ create plots to show the capacity of different weave type #################################### 
 ## done in Excel
@@ -288,3 +220,4 @@ rm(weavetype, areatype, i, j, m)
 #### clean environment ####
 rm(spdarray_i, volarray_i, spdcol, volcol, boxupperIndex, maxIndex, q90Index, q95Index, q975Index, q99Index, i, link_i, missingsensors)
 rm(arealookup, area_a, area_basic, area_md, area_frwybasic, i, wb)
+

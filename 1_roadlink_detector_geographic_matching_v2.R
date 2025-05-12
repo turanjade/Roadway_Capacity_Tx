@@ -160,9 +160,12 @@ sidefire_linkmatch_frwy_2025$amffspd = 0
 sidefire_linkmatch_frwy_2025$pmffspd = 0
 sidefire_linkmatch_frwy_2025$opffspd = 0
 sidefire_linkmatch_frwy_2025$areatype = 0
+sidefire_linkmatch_frwy_2025$length = 0
 
 for (i in 1:nrow(sidefire_linkmatch_frwy_2025)) {
   sidefire_linkmatch_frwy_2025$weavetype[i] = roadlink_2026$WEAVE_T[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])]
+  
+  sidefire_linkmatch_frwy_2025$length[i] = roadlink_2026$LENGTH[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])]
    
   sidefire_linkmatch_frwy_2025$amhrcap[i] = max(roadlink_2026$AMHRCAP_A[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])],
                                                 roadlink_2026$AMHRCAP_B[which(roadlink_2026$ID == sidefire_linkmatch_frwy_2025$rdwy_id[i])], na.rm = T)
