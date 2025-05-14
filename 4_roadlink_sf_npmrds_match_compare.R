@@ -1,6 +1,7 @@
 ## new code created on May 6, 2025
 ## identify congested rdwy segments using sidefire data and npmrds
 ## updated May 09, sf_2022_npmrds_2025 has been scaled up to 1.1
+## updated May 12, specific capacity categorized by weave type and ffspd. 
 
 setwd("C:/Users/rtu/OneDrive - The North Central Texas Council of Governments/Documents/0_ModelDataDevelopment/")
 
@@ -423,41 +424,43 @@ dev.off()
 
 
 
-################################ define a high contrast plot style, use this function in ggplot ################################
-# Define your custom black background theme # 👈 Use your custom theme here
-theme_black <- function(base_size = 20) {
-  theme_minimal(base_size = base_size) +
-    theme(
-      panel.background = element_rect(fill = "black", color = NA),
-      plot.background = element_rect(fill = "black", color = NA),
-      panel.grid.major = element_line(color = "gray30"),
-      panel.grid.minor = element_line(color = "gray20"),
-      axis.line = element_line(color = "white", size = 1),
-      axis.ticks = element_line(color = "white"),
-      
-      # Larger axis tick text
-      axis.text = element_text(color = "white", size = base_size + 2),
-      
-      # Larger, bold axis titles
-      axis.title = element_text(color = "white", size = base_size + 4, face = "bold"),
-      
-      # Bold and large title, subtitle, and caption
-      plot.title = element_text(color = "white", size = base_size + 6, face = "bold"),
-      # plot.subtitle = element_text(color = "white", size = base_size + 3, face = "bold"),
-      # plot.caption = element_text(color = "white", size = base_size + 2),
-      
-      # Legend styling
-      legend.background = element_rect(fill = "black"),
-      legend.key = element_rect(fill = "black"),
-      legend.text = element_text(color = "white", size = base_size),
-      legend.title = element_text(color = "white", face = "bold", size = base_size + 2)
-    )
+################################################ calculate density and categorized to LOS according to HCM 2016 ###############################
+sf_2022_npmrds_2025_plot$density = sf_2022_npmrds_2025_plot$avgvol/sf_2022_npmrds_2025_plot$avgspd/sf_2022_npmrds_2025_plot$lane
+# mark LOS to A, B, C, D, E, F (1-6), according to HCM 2016, needs to consider area type
+loslookup = data.frame(cbind(los = c('A','B','C','D','E'), 
+              densityurban = c(11, 18, 26, 35, 45),
+              densityrural = c(6, 14, 22, 29, 39)))
+sf_2022_npmrds_2025_plot$los = 0
+for (i in 1:nrow(sf_2022_npmrds_2025_plot)) {
+  if (sf_2022_npmrds_2025_plot$areatype[i] == '5') {
+    j = 1
+    while (j <= 5) {
+      if (sf_2022_npmrds_2025_plot$density[i] <= as.numeric(loslookup$densityrural[j])) {
+        sf_2022_npmrds_2025_plot$los[i] = loslookup$los[j]
+        break
+      }
+      else {
+        j = j + 1
+        next
+      }
+    }
+  }
+  else {
+    j = 1
+    while (j <= 5) {
+      if (sf_2022_npmrds_2025_plot$density[i] <= as.numeric(loslookup$densityurban[j])) {
+        sf_2022_npmrds_2025_plot$los[i] = loslookup$los[j]
+        break
+      }
+      else {
+        j = j + 1
+        next
+      }
+    }
+  }
 }
 
-annotate_stats <- function(label) {
-  annotate("text", x = Inf, y = 0, hjust = 1, vjust = 0,
-           label = label, color = "white", size = 8, fontface = "bold")
-}
+sf_2022_npmrds_2025_plot$los[which(sf_2022_npmrds_2025_plot$los == '0')] = 'F'
 
 ################################### comment out sessions ################################################
 ## including: keep records where ffspd > spd; re-organize weave type and write to csv to compare capacity & vol. 

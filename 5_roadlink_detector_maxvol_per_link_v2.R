@@ -23,113 +23,113 @@
 #                                      !duplicated(vol_per_day_2022$sensor_date_merge, fromLast = TRUE),] # 1322 link ID remains
 
 ## create summary tables for available weave types, starting from FRWY_BASIC
-## each column represents different area types, rows represent vol95, volmax, volboxupper, capacity (perlane), count of selected links, count of records
-area_frwybasic = unique(sidefire_vol_spd_2022$areatype[which(sidefire_vol_spd_2022$weavetype == 'FRWY_BASIC')])
-sf_vol_spd_2022_summary_frwybasic = matrix(0, nrow = length(area_frwybasic), ncol = 5)
-for (i in 1:length(area_frwybasic)) {
+## each column represents different ffspd, rows represent vol95, volmax, volboxupper, capacity (perlane), count of selected links, count of records
+ffspd_frwybasic = unique(sidefire_vol_spd_2022$ffspd[which(sidefire_vol_spd_2022$weavetype == 'FRWY_BASIC')])
+sf_vol_spd_2022_summary_frwybasic = matrix(0, nrow = length(ffspd_frwybasic), ncol = 5)
+for (i in 1:length(ffspd_frwybasic)) {
   sf_vol_spd_2022_summary_frwybasic[i,1] = max(sidefire_vol_spd_2022$vol95perlane[which(sidefire_vol_spd_2022$weavetype == 'FRWY_BASIC' &
-                                                                                          sidefire_vol_spd_2022$areatype == area_frwybasic[i] &
+                                                                                          sidefire_vol_spd_2022$ffspd == ffspd_frwybasic[i] &
                                                                                           sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spd95 > 0)]) 
   sf_vol_spd_2022_summary_frwybasic[i,2] = max(sidefire_vol_spd_2022$volmaxperlane[which(sidefire_vol_spd_2022$weavetype == 'FRWY_BASIC' &
-                                                                                           sidefire_vol_spd_2022$areatype == area_frwybasic[i] &
+                                                                                           sidefire_vol_spd_2022$ffspd == ffspd_frwybasic[i] &
                                                                                            sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdmax > 0)]) 
   sf_vol_spd_2022_summary_frwybasic[i,3] = max(sidefire_vol_spd_2022$volboxupperperlane[which(sidefire_vol_spd_2022$weavetype == 'FRWY_BASIC' &
-                                                                                                sidefire_vol_spd_2022$areatype == area_frwybasic[i] &
+                                                                                                sidefire_vol_spd_2022$ffspd == ffspd_frwybasic[i] &
                                                                                                 sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdboxupper > 0)])
   # problematic, multiple capacity in one weave type and area type
   sf_vol_spd_2022_summary_frwybasic[i,4] = max(sidefire_vol_spd_2022$hrcapperlane[which(sidefire_vol_spd_2022$weavetype == 'FRWY_BASIC' &
-                                                                                          sidefire_vol_spd_2022$areatype == area_frwybasic[i])]) 
+                                                                                          sidefire_vol_spd_2022$ffspd == ffspd_frwybasic[i])]) 
   
   # total number of records
   sf_vol_spd_2022_summary_frwybasic[i,5] = length(which(sidefire_vol_spd_2022$weavetype == 'FRWY_BASIC' &
-                                                          sidefire_vol_spd_2022$areatype == area_frwybasic[i]))
+                                                          sidefire_vol_spd_2022$ffspd == ffspd_frwybasic[i]))
   
 }
 
 sf_vol_spd_2022_summary_frwybasic = data.frame(sf_vol_spd_2022_summary_frwybasic)
 colnames(sf_vol_spd_2022_summary_frwybasic) = c('vol95perlane','volmaxperlane','volboxupperperlane','hrcapperlane','record_count')
-rownames(sf_vol_spd_2022_summary_frwybasic) = as.character(area_frwybasic)
+rownames(sf_vol_spd_2022_summary_frwybasic) = as.character(ffspd_frwybasic)
 
 ## create summary tables for available weave types, from BASIC 
 ## each column represents different area types, rows represent vol95, volmax, volboxupper, capacity (perlane), count of records
-area_basic = unique(sidefire_vol_spd_2022$areatype[which(sidefire_vol_spd_2022$weavetype == 'BASIC')])
-sf_vol_spd_2022_summary_basic = matrix(0, nrow = length(area_basic), ncol = 5)
-for (i in 1:length(area_basic)) {
+ffspd_basic = unique(sidefire_vol_spd_2022$ffspd[which(sidefire_vol_spd_2022$weavetype == 'BASIC')])
+sf_vol_spd_2022_summary_basic = matrix(0, nrow = length(ffspd_basic), ncol = 5)
+for (i in 1:length(ffspd_basic)) {
   sf_vol_spd_2022_summary_basic[i,1] = max(sidefire_vol_spd_2022$vol95perlane[which(sidefire_vol_spd_2022$weavetype == 'BASIC' &
-                                                                                      sidefire_vol_spd_2022$areatype == area_basic[i] &
+                                                                                      sidefire_vol_spd_2022$ffspd == ffspd_basic[i] &
                                                                                       sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spd95 > 0)])
   sf_vol_spd_2022_summary_basic[i,2] = max(sidefire_vol_spd_2022$volmaxperlane[which(sidefire_vol_spd_2022$weavetype == 'BASIC' &
-                                                                                       sidefire_vol_spd_2022$areatype == area_basic[i] &
+                                                                                       sidefire_vol_spd_2022$ffspd == ffspd_basic[i] &
                                                                                        sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdmax > 0)])
   sf_vol_spd_2022_summary_basic[i,3] = max(sidefire_vol_spd_2022$volboxupperperlane[which(sidefire_vol_spd_2022$weavetype == 'BASIC' &
-                                                                                            sidefire_vol_spd_2022$areatype == area_basic[i] &
+                                                                                            sidefire_vol_spd_2022$ffspd == ffspd_basic[i] &
                                                                                             sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdboxupper > 0)])
   # problematic, multiple capacity in one weave type and area type
   sf_vol_spd_2022_summary_basic[i,4] = max(sidefire_vol_spd_2022$hrcapperlane[which(sidefire_vol_spd_2022$weavetype == 'BASIC' &
-                                                                                      sidefire_vol_spd_2022$areatype == area_basic[i])]) 
+                                                                                      sidefire_vol_spd_2022$ffspd == ffspd_basic[i])]) 
   
   # total number of records
   sf_vol_spd_2022_summary_basic[i,5] = length(which(sidefire_vol_spd_2022$weavetype == 'BASIC' &
-                                                      sidefire_vol_spd_2022$areatype == area_basic[i]))
+                                                      sidefire_vol_spd_2022$ffspd == ffspd_basic[i]))
 }
 
 sf_vol_spd_2022_summary_basic = data.frame(sf_vol_spd_2022_summary_basic)
 colnames(sf_vol_spd_2022_summary_basic) = c('vol95perlane','volmaxperlane','volboxupperperlane','hrcapperlane','record_count')
-rownames(sf_vol_spd_2022_summary_basic) = as.character(area_basic)
+rownames(sf_vol_spd_2022_summary_basic) = as.character(ffspd_basic)
 
 ## create summary tables for available weave types, from MD 
 ## each column represents different area types, rows represent vol95, volmax, volboxupper, capacity (perlane), count of records
-area_md = unique(sidefire_vol_spd_2022$areatype[which(sidefire_vol_spd_2022$weavetype == 'MD')])
-sf_vol_spd_2022_summary_md = matrix(0, nrow = length(area_md), ncol = 5)
-for (i in 1:length(area_md)) {
+ffspd_md = unique(sidefire_vol_spd_2022$ffspd[which(sidefire_vol_spd_2022$weavetype == 'MD')])
+sf_vol_spd_2022_summary_md = matrix(0, nrow = length(ffspd_md), ncol = 5)
+for (i in 1:length(ffspd_md)) {
   sf_vol_spd_2022_summary_md[i,1] = max(sidefire_vol_spd_2022$vol95perlane[which(sidefire_vol_spd_2022$weavetype == 'MD' &
-                                                                                   sidefire_vol_spd_2022$areatype == area_md[i] &
+                                                                                   sidefire_vol_spd_2022$ffspd == ffspd_md[i] &
                                                                                    sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spd95 > 0)]) 
   sf_vol_spd_2022_summary_md[i,2] = max(sidefire_vol_spd_2022$volmaxperlane[which(sidefire_vol_spd_2022$weavetype == 'MD' &
-                                                                                    sidefire_vol_spd_2022$areatype == area_md[i] &
+                                                                                    sidefire_vol_spd_2022$ffspd == ffspd_md[i] &
                                                                                     sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdmax > 0)]) 
   sf_vol_spd_2022_summary_md[i,3] = max(sidefire_vol_spd_2022$volboxupperperlane[which(sidefire_vol_spd_2022$weavetype == 'MD' &
-                                                                                         sidefire_vol_spd_2022$areatype == area_md[i] &
+                                                                                         sidefire_vol_spd_2022$ffspd == ffspd_md[i] &
                                                                                          sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdboxupper > 0)]) 
-  # problematic, multiple capacity in one weave type and area type
+  # problematic, multiple capacity in one weave type and ffspd type
   sf_vol_spd_2022_summary_md[i,4] = max(sidefire_vol_spd_2022$hrcapperlane[which(sidefire_vol_spd_2022$weavetype == 'MD' &
-                                                                                   sidefire_vol_spd_2022$areatype == area_md[i])]) 
+                                                                                   sidefire_vol_spd_2022$ffspd == ffspd_md[i])]) 
   
   # total number of records
   sf_vol_spd_2022_summary_md[i,5] = length(which(sidefire_vol_spd_2022$weavetype == 'MD' &
-                                                   sidefire_vol_spd_2022$areatype == area_md[i]))
+                                                   sidefire_vol_spd_2022$ffspd == ffspd_md[i]))
 }
 
 sf_vol_spd_2022_summary_md = data.frame(sf_vol_spd_2022_summary_md)
 colnames(sf_vol_spd_2022_summary_md) = c('vol95perlane','volmaxperlane','volboxupperperlane','hrcapperlane','record_count')
-rownames(sf_vol_spd_2022_summary_md) = as.character(area_md)
+rownames(sf_vol_spd_2022_summary_md) = as.character(ffspd_md)
 
 ## create summary tables for available weave types, from A 
 ## each column represents different area types, rows represent vol95, volmax, volboxupper, capacity (perlane), count of records
-area_a = unique(sidefire_vol_spd_2022$areatype[which(sidefire_vol_spd_2022$weavetype == 'A')])
-sf_vol_spd_2022_summary_a = matrix(0, nrow = length(area_a), ncol = 5)
-for (i in 1:length(area_a)) {
+ffspd_a = unique(sidefire_vol_spd_2022$ffspd[which(sidefire_vol_spd_2022$weavetype == 'A')])
+sf_vol_spd_2022_summary_a = matrix(0, nrow = length(ffspd_a), ncol = 5)
+for (i in 1:length(ffspd_a)) {
   sf_vol_spd_2022_summary_a[i,1] = max(sidefire_vol_spd_2022$vol95perlane[which(sidefire_vol_spd_2022$weavetype == 'A' &
-                                                                                  sidefire_vol_spd_2022$areatype == area_a[i] &
+                                                                                  sidefire_vol_spd_2022$ffspd == ffspd_a[i] &
                                                                                   sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spd95 > 0)]) 
   sf_vol_spd_2022_summary_a[i,2] = max(sidefire_vol_spd_2022$volmaxperlane[which(sidefire_vol_spd_2022$weavetype == 'A' &
-                                                                                   sidefire_vol_spd_2022$areatype == area_a[i] &
+                                                                                   sidefire_vol_spd_2022$ffspd == ffspd_a[i] &
                                                                                    sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdmax > 0)]) 
   sf_vol_spd_2022_summary_a[i,3] = max(sidefire_vol_spd_2022$volboxupperperlane[which(sidefire_vol_spd_2022$weavetype == 'A' &
-                                                                                        sidefire_vol_spd_2022$areatype == area_a[i] &
+                                                                                        sidefire_vol_spd_2022$ffspd == ffspd_a[i] &
                                                                                         sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdboxupper > 0)]) 
   # problematic, multiple capacity in one weave type and area type
   sf_vol_spd_2022_summary_a[i,4] = max(sidefire_vol_spd_2022$hrcapperlane[which(sidefire_vol_spd_2022$weavetype == 'A' &
-                                                                                  sidefire_vol_spd_2022$areatype == area_a[i])]) 
+                                                                                  sidefire_vol_spd_2022$ffspd == ffspd_a[i])]) 
   
   # total number of records
   sf_vol_spd_2022_summary_a[i,5] = length(which(sidefire_vol_spd_2022$weavetype == 'A' &
-                                                  sidefire_vol_spd_2022$areatype == area_a[i]))
+                                                  sidefire_vol_spd_2022$ffspd == ffspd_a[i]))
 }
 
 sf_vol_spd_2022_summary_a = data.frame(sf_vol_spd_2022_summary_a)
 colnames(sf_vol_spd_2022_summary_a) = c('vol95perlane','volmaxperlane','volboxupperperlane','hrcapperlane','record_count')
-rownames(sf_vol_spd_2022_summary_a) = as.character(area_a)
+rownames(sf_vol_spd_2022_summary_a) = as.character(ffspd_a)
 
 arealookup = cbind(c(1,2,3,4,5), c('CBD','OBD','Urban Res','Suburb Res','Rural'))
 
@@ -154,39 +154,62 @@ rm(sf_vol_spd_2022_summary_a, sf_vol_spd_2022_summary_basic, sf_vol_spd_2022_sum
 
 ## create summary data for all area types, all weave types, volboxupperperlane
 weavetype = unique(sidefire_vol_spd_2022$weavetype)
-areatype = unique(sidefire_vol_spd_2022$areatype)
-sf_vol_spd_summary_all = matrix(0, nrow = length(weavetype) * length(areatype), ncol = 3)
+ffspd = unique(sidefire_vol_spd_2022$ffspd)
+sf_vol_spd_summary_all = matrix(0, nrow = length(weavetype) * length(ffspd), ncol = 3)
 m = 0
 for (i in 1:length(weavetype)) {
-  for (j in 1:length(areatype)) {
+  for (j in 1:length(ffspd)) {
     m = m + 1
-    sf_vol_spd_summary_all[m,] = c(weavetype[i], areatype[j], 
+    sf_vol_spd_summary_all[m,] = c(weavetype[i], ffspd[j], 
                                    max(sidefire_vol_spd_2022$volboxupperperlane[which(sidefire_vol_spd_2022$weavetype == weavetype[i] &
-                                                                                        sidefire_vol_spd_2022$areatype == areatype[j] &
+                                                                                        sidefire_vol_spd_2022$ffspd == ffspd[j] &
                                                                                         sidefire_vol_spd_2022$ffspd - sidefire_vol_spd_2022$spdboxupper > 0)]))
   }
 }
 
 sf_vol_spd_summary_all = data.frame(sf_vol_spd_summary_all)
-colnames(sf_vol_spd_summary_all) = c('weavetype', 'areatype', 'sfcapperlane')
+colnames(sf_vol_spd_summary_all) = c('weavetype', 'ffspd', 'sfcapperlane')
 
 
-############################################### plot VC ratio by using the max vol identified above ##########################################
+############################################### replace capacity to the max vol identified above, npmrds_sidefire match ##########################################
 ## add calculated capacity to sf_2022_npmrds_2025_plot data table, generated in 4_roadlink_sf_npmrds_match_compare.R 
 ## if Inf value of the specific weave * area type, we use model capacity
 sf_2022_npmrds_2025_plot$sfcapperlane = 0
 for (i in 1:nrow(sf_2022_npmrds_2025_plot)) {
   if (length(which(is.infinite(sf_vol_spd_summary_all$sfcapperlane[which(sf_vol_spd_summary_all$weavetype == sf_2022_npmrds_2025_plot$weavetype[i] &
-                                                             sf_vol_spd_summary_all$areatype == sf_2022_npmrds_2025_plot$areatype[i])]))) == 0) {
+                                                             sf_vol_spd_summary_all$ffspd == sf_2022_npmrds_2025_plot$ffspd[i])]))) == 0) {
     sf_2022_npmrds_2025_plot$sfcapperlane[i] = as.numeric(sf_vol_spd_summary_all$sfcapperlane[which(sf_vol_spd_summary_all$weavetype == sf_2022_npmrds_2025_plot$weavetype[i] &
-                                                                                                sf_vol_spd_summary_all$areatype == sf_2022_npmrds_2025_plot$areatype[i])])
+                                                                                                sf_vol_spd_summary_all$ffspd == sf_2022_npmrds_2025_plot$ffspd[i])])
   }
   else {
     sf_2022_npmrds_2025_plot$sfcapperlane[i] = sf_2022_npmrds_2025_plot$hrcap[i]/sf_2022_npmrds_2025_plot$lane[i]
   }
 }
 
-rm(weavetype, areatype, i, j, m)
+rm(weavetype, ffspd, i, j, m)
+
+############################################### replace capacity to the max vol identified above, sidefire only ##########################################
+## add calculated capacity to sidefire_vol_spd_2022_plot data table, generated in 2_.R 
+## if Inf value of the specific weave * area type, we use model capacity
+sidefire_linkmatch_frwy_2025$sfcapperlane = 0
+for (i in 1:nrow(sidefire_linkmatch_frwy_2025)) {
+  if (length(which(is.infinite(sf_vol_spd_summary_all$sfcapperlane[
+    which(sf_vol_spd_summary_all$weavetype == sidefire_linkmatch_frwy_2025$weavetype[i] &
+          sf_vol_spd_summary_all$ffspd == sidefire_linkmatch_frwy_2025$amffspd[i])]))) == 0 &
+    
+      length(which(sf_vol_spd_summary_all$weavetype == sidefire_linkmatch_frwy_2025$weavetype[i] &
+                   sf_vol_spd_summary_all$ffspd == sidefire_linkmatch_frwy_2025$amffspd[i])) > 0) {
+    
+    sidefire_linkmatch_frwy_2025$sfcapperlane[i] = as.numeric(sf_vol_spd_summary_all$sfcapperlane[
+      which(sf_vol_spd_summary_all$weavetype == sidefire_linkmatch_frwy_2025$weavetype[i] &
+              sf_vol_spd_summary_all$ffspd == sidefire_linkmatch_frwy_2025$amffspd[i])])
+  }
+  else {
+    sidefire_linkmatch_frwy_2025$sfcapperlane[i] = sidefire_linkmatch_frwy_2025$amhrcap[i]/sidefire_linkmatch_frwy_2025$amlane[i]
+  }
+}
+
+rm(weavetype, ffspd, i, j, m)
 
 #################################### plot VC ratio vs Speed by weave type, use SF capacity, use NPMRDS speed ########################################
 png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VCratio vs Spd, PK by data source npm, cap from SF_Frwybasic.png", 
@@ -197,7 +220,7 @@ ggplot(sf_2022_npmrds_2025_plot[which(sf_2022_npmrds_2025_plot$time != 'amop' &
                                         sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC'),],
        aes(x = (as.numeric(avgvol)/as.numeric(lane))/as.numeric(sfcapperlane), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
   xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85), xlim = c(0,1)) + 
-  labs(title = 'PK VC ratio vs Speed, FRWYBASIC') +
+  labs(title = 'PK VC ratio vs Speed, FRWYBASIC, use SF cap') +
   theme_black()
 dev.off()
 
@@ -209,10 +232,24 @@ ggplot(sf_2022_npmrds_2025_plot[which((sf_2022_npmrds_2025_plot$time == 'amop' |
                                         sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC'),],
        aes(x = (as.numeric(avgvol)/as.numeric(lane))/as.numeric(sfcapperlane), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
   xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85)) + 
-  labs(title = 'OP VC ratio vs Speed, FRWYBASIC') +
+  labs(title = 'OP VC ratio vs Speed, FRWYBASIC, use SF cap') +
   theme_black()   
 dev.off()
 
+# only plot los A to D
+png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VCratio vs Spd, PK by data source npm, cap from SF_Frwybasic, LOS A-D.png", 
+    width = 800, height = 600)
+ggplot(sf_2022_npmrds_2025_plot[which(sf_2022_npmrds_2025_plot$time != 'amop' &
+                                        sf_2022_npmrds_2025_plot$time != 'pmop' &
+                                        sf_2022_npmrds_2025_plot$source == 'npm' &
+                                        sf_2022_npmrds_2025_plot$weavetype == 'FRWY_BASIC' &
+                                        sf_2022_npmrds_2025_plot$los != 'E' &
+                                        sf_2022_npmrds_2025_plot$los != 'F'),],
+       aes(x = (as.numeric(avgvol)/as.numeric(lane))/as.numeric(sfcapperlane), y = as.numeric(avgspd))) + geom_point(color = '#B3E5FC', size = 2) +
+  xlab('VC ratio') + ylab('Speed (MPH)') + coord_cartesian(ylim = c(0, 85), xlim = c(0,1)) + 
+  labs(title = 'PK VC ratio vs Speed, FRWYBASIC, use SF cap') +
+  theme_black()
+dev.off()
 
 ################################################ create plots to show the capacity of different weave type #################################### 
 ## done in Excel

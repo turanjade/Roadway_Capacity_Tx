@@ -145,3 +145,30 @@ sidefire_vol_spd_2022$vol90perlane = sidefire_vol_spd_2022$vol90_s/sidefire_vol_
 sidefire_vol_spd_2022$vol95perlane = sidefire_vol_spd_2022$vol95_s/sidefire_vol_spd_2022$lane
 sidefire_vol_spd_2022$volmaxperlane = sidefire_vol_spd_2022$volmax_s/sidefire_vol_spd_2022$lane
 sidefire_vol_spd_2022$volboxupperperlane = sidefire_vol_spd_2022$volboxupper_s/sidefire_vol_spd_2022$lane
+
+
+################################################## create a df that stores all the records from vol_per_day_2022_linkmatch ####################
+vol_per_day_2022_feb_workday_transpose = matrix(0, nrow = 0, ncol = 12)
+
+for (i in 1:nrow(vol_per_day_2022_feb_workday)) {
+  vol_per_day_2022_feb_workday_transpose = rbind(vol_per_day_2022_feb_workday_transpose,
+                                               cbind(vol_per_day_2022_feb_workday$LinkID[i], 
+                                                     sidefire_linkmatch_frwy_2025$rdwy_id[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     sidefire_linkmatch_frwy_2025$TMC[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     sidefire_linkmatch_frwy_2025$weavetype[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     sidefire_linkmatch_frwy_2025$areatype[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     sidefire_linkmatch_frwy_2025$length[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     sidefire_linkmatch_frwy_2025$amlane[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     sidefire_linkmatch_frwy_2025$amffspd[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     sidefire_linkmatch_frwy_2025$amhrcap[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     sidefire_linkmatch_frwy_2025$sfcapperlane[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
+                                                     t(vol_per_day_2022_feb_workday[i, volcol]), t(vol_per_day_2022_feb_workday[i, spdcol])
+                                                     ))
+}
+vol_per_day_2022_feb_workday_transpose = data.frame(vol_per_day_2022_feb_workday_transpose)
+
+colnames(vol_per_day_2022_feb_workday_transpose) = c(
+  'sf_id','rdwy_id','TMC','weavetype','areatype','length','lane','ffspd','hrcap','sfcap','spd','vol'
+)
+
+rm(i, spdcol, volcol)
