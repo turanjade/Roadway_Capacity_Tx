@@ -1,5 +1,5 @@
 ## new code created on May 6, 2025
-## identify congested rdwy segments using sidefire data and npmrds
+## identify congested rdwy segments using sidefire data and npmrds, according to LOS
 ## updated May 09, sf_2022_npmrds_2025 has been scaled up to 1.1
 ## updated May 12, specific capacity categorized by weave type and ffspd. 
 
@@ -11,31 +11,21 @@ library(viridis)  # for colorblind-friendly palettes
 ## Data sources: 
 ## 1) sidefire_linkmatch_frwy_2025 is the SF MRDWY match, generated from roadlink_detector_geographic_matching_v2.R
 ## 2) sf_2022_npmrds_2025 and sf_2022_npmrds_2025_plot from roadlink_sf_npmrds_match_compare.R
-## 3) vol_per_day_2022 is the processed data from the first section, different from roadlink_detector_vol_spd_stats_calculate_v2.R, which only has workday
-## 4) vol_per_day_2022_linkmatch is the processed data from roadlink_sf_npmrds_match_compare.R, which deletes invalid data (Records_per_lane & dups)
-## 5) vol_per_day_2022_raw is the raw data read from file
+## 3) vol_per_day_2022_linkmatch is the processed data from 2_roadlink_detector_vol_spd_stats_calculate_v2, which deletes invalid data (Records_per_lane & dups)
+## 4) vol_per_day_2022_raw is the raw data read from file
 
 ####################################### Filter out valid dataset with matched link ##############################################
-## delete records that has 250-288 records_per_lane, and all dups
 
-# check with vol_per_day 2022. Keep only Records_Per_Lane between 250 and 288, 
-# vol_per_day_2022 = vol_per_day_2022_raw[which(vol_per_day_2022_raw$Records_Per_Lane >= 250 &
-#                                                vol_per_day_2022_raw$Records_Per_Lane <= 288),]
-# delete all dups if sensors ID & recorded data are exactly the same
-# vol_per_day_2022$sensor_date_merge = paste(vol_per_day_2022$LinkID, vol_per_day_2022$Month, vol_per_day_2022$Date, sep = '_')
-# vol_per_day_2022 = vol_per_day_2022[!duplicated(vol_per_day_2022$sensor_date_merge) & 
-#                                      !duplicated(vol_per_day_2022$sensor_date_merge, fromLast = TRUE),] # 1322 link ID remains
-
+# select workday, Tuesday, Wednesday, Thursday, in all months
+vol_per_day_2022_workday = vol_per_day_2022_linkmatch[which((vol_per_day_2022_linkmatch$DOW == 3 |
+                                                               vol_per_day_2022_linkmatch$DOW == 4 |
+                                                               vol_per_day_2022_linkmatch$DOW == 5)),] 
 
 # select workday, Tuesday, Wednesday, Thursday & February (matches with npmrds data), 956 remains
-# vol_per_day_2022_feb_workday = vol_per_day_2022_linkmatch[which((vol_per_day_2022_linkmatch$DOW == 3 |
-#                                                                   vol_per_day_2022_linkmatch$DOW == 4 |
-#                                                                   vol_per_day_2022_linkmatch$DOW == 5) & 
-#                                                                  vol_per_day_2022_linkmatch$Month == 2),] # select Feb workday records, 956 detectors
-
-# vol_per_day_2022_workday = vol_per_day_2022_linkmatch[which((vol_per_day_2022_linkmatch$DOW == 3 |
-#                                                               vol_per_day_2022_linkmatch$DOW == 4 |
-#                                                               vol_per_day_2022_linkmatch$DOW == 5)),] # select Feb workday records, 956 detectors
+vol_per_day_2022_feb_workday = vol_per_day_2022_linkmatch[which((vol_per_day_2022_linkmatch$DOW == 3 |
+                                                                   vol_per_day_2022_linkmatch$DOW == 4 |
+                                                                   vol_per_day_2022_linkmatch$DOW == 5) & 
+                                                                  vol_per_day_2022_linkmatch$Month == 2),] 
 
 ############################### read npmrds feb 2024 average speed and match with sidefire ################
 # first select locations (key: TMC) where average speed is lower than a certain threshold --> based on HCM
@@ -285,6 +275,48 @@ for (i in 9:13) {
 ## clean environment
 rm(amopspdcol,pmopspdcol,amopvolcol,pmopvolcol,i,npm_am,npm_amop,npm_pm,npm_pmop,sf_am,sf_amop,sf_pm,sf_pmop)
 
+################################################ calculate density and categorized to LOS according to HCM 2016 ###############################
+sf_2022_npmrds_2025_plot$density = sf_2022_npmrds_2025_plot$avgvol/sf_2022_npmrds_2025_plot$avgspd/sf_2022_npmrds_2025_plot$lane
+# mark LOS to A, B, C, D, E, F (1-6), according to HCM 2016, needs to consider area type
+loslookup = data.frame(cbind(los = c('A','B','C','D','E'), 
+                             densityurban = c(11, 18, 26, 35, 45),
+                             densityrural = c(6, 14, 22, 29, 39)))
+sf_2022_npmrds_2025_plot$los = 0
+for (i in 1:nrow(sf_2022_npmrds_2025_plot)) {
+  if (sf_2022_npmrds_2025_plot$areatype[i] == '5') {
+    j = 1
+    while (j <= 5) {
+      if (sf_2022_npmrds_2025_plot$density[i] <= as.numeric(loslookup$densityrural[j])) {
+        sf_2022_npmrds_2025_plot$los[i] = loslookup$los[j]
+        break
+      }
+      else {
+        j = j + 1
+        next
+      }
+    }
+  }
+  else {
+    j = 1
+    while (j <= 5) {
+      if (sf_2022_npmrds_2025_plot$density[i] <= as.numeric(loslookup$densityurban[j])) {
+        sf_2022_npmrds_2025_plot$los[i] = loslookup$los[j]
+        break
+      }
+      else {
+        j = j + 1
+        next
+      }
+    }
+  }
+}
+
+sf_2022_npmrds_2025_plot$los[which(sf_2022_npmrds_2025_plot$los == '0')] = 'F'
+
+
+#################################### plot ###########################################
+#################################### plot ###########################################
+#################################### plot ###########################################
 #################################### plot speed comparison by time period and weave type ###########################################
 library(Metrics)
 library(ModelMetrics)
@@ -424,43 +456,6 @@ dev.off()
 
 
 
-################################################ calculate density and categorized to LOS according to HCM 2016 ###############################
-sf_2022_npmrds_2025_plot$density = sf_2022_npmrds_2025_plot$avgvol/sf_2022_npmrds_2025_plot$avgspd/sf_2022_npmrds_2025_plot$lane
-# mark LOS to A, B, C, D, E, F (1-6), according to HCM 2016, needs to consider area type
-loslookup = data.frame(cbind(los = c('A','B','C','D','E'), 
-              densityurban = c(11, 18, 26, 35, 45),
-              densityrural = c(6, 14, 22, 29, 39)))
-sf_2022_npmrds_2025_plot$los = 0
-for (i in 1:nrow(sf_2022_npmrds_2025_plot)) {
-  if (sf_2022_npmrds_2025_plot$areatype[i] == '5') {
-    j = 1
-    while (j <= 5) {
-      if (sf_2022_npmrds_2025_plot$density[i] <= as.numeric(loslookup$densityrural[j])) {
-        sf_2022_npmrds_2025_plot$los[i] = loslookup$los[j]
-        break
-      }
-      else {
-        j = j + 1
-        next
-      }
-    }
-  }
-  else {
-    j = 1
-    while (j <= 5) {
-      if (sf_2022_npmrds_2025_plot$density[i] <= as.numeric(loslookup$densityurban[j])) {
-        sf_2022_npmrds_2025_plot$los[i] = loslookup$los[j]
-        break
-      }
-      else {
-        j = j + 1
-        next
-      }
-    }
-  }
-}
-
-sf_2022_npmrds_2025_plot$los[which(sf_2022_npmrds_2025_plot$los == '0')] = 'F'
 
 ################################### comment out sessions ################################################
 ## including: keep records where ffspd > spd; re-organize weave type and write to csv to compare capacity & vol. 
