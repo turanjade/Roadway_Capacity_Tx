@@ -197,3 +197,74 @@ nll_bpr = function(params, x, t0, t_obs) {
   return(ll_negative)
 }
 
+
+####################### Parabolic shape fitting ########################################
+
+nll_parab = function(params, x, y) {
+  a <- params[1]
+  b <- params[2]
+  sigma <- params[3]
+  
+  # Constrain sigma to be positive
+  if (sigma <= 0) return(Inf)
+  
+  # calculate b and h from a and e
+  y_hat = b * (a - x) * x
+  
+  residuals <- y - y_hat
+  n <- length(y)
+  
+  
+  ll_negative <- 0.5 * n * log(2 * pi * sigma^2) + 0.5 * sum(residuals^2) / sigma^2
+  return(ll_negative)
+}
+
+####################### 10 folder cross-validation ######################################
+k_folder = function(x, y, fn, initial, lower, upper) {
+  n <- length(x)
+  folds <- sample(rep(1:10, length.out = n))
+  
+  cv_results <- data.frame(
+    fold = 1:10,
+    a = NA, e = NA, sigma = NA,
+    negLL = NA
+  )
+  
+  
+  for (k in 1:10) {
+    # Split into training and validation
+    train_idx <- which(folds != k)
+    valid_idx <- which(folds == k)
+    
+    x_train <- x[train_idx]
+    y_train <- y[train_idx]
+    
+    x_valid <- x[valid_idx]
+    y_valid <- y[valid_idx]
+    
+    # Fit model on training fold
+    fit <- optim(
+      par = initial, 
+      fn = fn,
+      x = x_train,
+      y = y_train,
+      #method = 'Nelder-Mead',
+      # method = 'SANN'
+      method = "L-BFGS-B",
+      lower = lower,
+      upper = upper
+    )
+    
+    # Evaluate on validation fold
+    est_params <- fit$par
+    nll_valid <- nll_parab(est_params, x_valid, y_valid)
+    
+    # Store results
+    cv_results[k, c("a", "b", "sigma")] <- est_params
+    cv_results[k, "negLL"] <- nll_valid
+  }
+  
+  params_mle <- cv_results %>%
+    summarise(across(c(a, b, sigma, negLL), list(mean = mean, sd = sd)))
+  return(params_mle)
+}

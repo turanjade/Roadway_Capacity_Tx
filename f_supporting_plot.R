@@ -46,7 +46,8 @@ theme_black <- function(base_size = 20) {
       legend.background = element_rect(fill = "black"),
       legend.key = element_rect(fill = "black"),
       legend.text = element_text(color = "white", size = base_size),
-      legend.title = element_text(color = "white", face = "bold", size = base_size + 2)
+      legend.title = element_text(color = "white", face = "bold", size = base_size + 2),
+      legend.position = 'top'
     )
 }
 
@@ -56,10 +57,3 @@ annotate_stats <- function(label) {
 }
 
 
-
-########################## comment out ##################################
-## ggridges plot
-ggplot(sidefire_vol_spd_2022_plot[which(sidefire_vol_spd_2022_plot$weavetype == 'FRWY_BASIC' &
-                                          sidefire_vol_spd_2022_plot$ffspd == '60'),], aes(y = factor(voltype), x = as.numeric(volperlane))) +
-  geom_density_ridges(scale = 1.2, fill = "skyblue") + 
-  theme_black()

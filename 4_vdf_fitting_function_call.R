@@ -29,3 +29,31 @@ vdf_fitting_sf_npmrds_frwybasic = VDF_fitting(sf_2022_npmrds_2025_vdf,
                                               taft_params = c(8, -0.15),
                                               fn = nll_vdf)
 
+
+vdf_fitting_sf_npmrds_basic = VDF_fitting(sf_2022_npmrds_2025_vdf, 
+                                              'BASIC',
+                                              c('am','pm'),
+                                              'npm',
+                                              bound_a = c(0, seq(3,10)),
+                                              bound_e = c(-Inf, 0),
+                                              taft_params = c(8, -0.15),
+                                              fn = nll_vdf)
+
+vdf_fitting_sf_npmrds_md = VDF_fitting(sf_2022_npmrds_2025_vdf, 
+                                          'MD',
+                                          c('am','pm'),
+                                          'npm',
+                                          bound_a = c(0, seq(3,10)),
+                                          bound_e = c(-Inf, 0),
+                                          taft_params = c(8, -0.15),
+                                          fn = nll_vdf)
+
+
+vdf_fitting_sf_npmrds_A = VDF_fitting(sf_2022_npmrds_2025_vdf, 
+                                       'A',
+                                       c('am','pm'),
+                                       'npm',
+                                       bound_a = c(0, seq(3,10)),
+                                       bound_e = c(-Inf, 0),
+                                       taft_params = c(8, -0.15),
+                                       fn = nll_vdf)

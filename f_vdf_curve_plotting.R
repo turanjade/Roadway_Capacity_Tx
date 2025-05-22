@@ -2,7 +2,7 @@
 
 ## this page specifies the curve fitting plots
 
-x_y_bycategory = function(data, x, y, x_hat, y_hat, category, category_uniq, xlab, ylab, title, label) {
+x_y_bycategory = function(x, y, x_hat, y_hat, category, category_uniq, xlab, ylab, title, label, legend, legend.title) {
   # data includes at least x (vc), y (v), category
   # category_uniq specifies all possible category
   # params includes all params
@@ -21,7 +21,7 @@ x_y_bycategory = function(data, x, y, x_hat, y_hat, category, category_uniq, xla
        pch = 3, col = 'white',
        
        xlab = xlab, ylab = ylab, 
-       xlim = c(0,max(x)), ylim = c(0,max(c(y, y_hat))),
+       xlim = c(0,max(c(x,x_hat, na.rm = T))), ylim = c(0,max(c(y, y_hat, na.rm = T))),
        
        # Axis label color
        col.lab = "white", 
@@ -57,6 +57,25 @@ x_y_bycategory = function(data, x, y, x_hat, y_hat, category, category_uniq, xla
            y_hat[which(category == category_uniq[v])],
            col = colors_deep[v+1], pch = 16)
   }
+  
+  if (legend == 1) {
+    # Manually set legend position using coordinates
+    legend_x <- par("usr")[1] + 0.005 * diff(par("usr")[1:2])  # a bit right of the left axis
+    legend_y <- par("usr")[3] + 0.11* (length(category_uniq)) * diff(par("usr")[3:4])  # a bit above the bottom axis
+    
+    legend(x = legend_x, y = legend_y,
+           legend = category_uniq,
+           col = colors_deep[2:(length(category_uniq) + 1)],
+           pch = c(16, 16, 16, 16),
+           title = legend.title,
+           x.intersp = 0.5,              # Reduces space between symbol and text
+           y.intersp = 1,              # Reduces vertical spacing between items
+           text.col = "white",
+           bg = "transparent",
+           cex = 2)
+  }
+
+  
 }
 
 
