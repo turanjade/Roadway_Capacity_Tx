@@ -114,9 +114,9 @@ row_select = which(sf_2022_npmrds_2025_plot$weavetype == 'BASIC' &
                      sf_2022_npmrds_2025_plot$time != 'amop' &
                      sf_2022_npmrds_2025_plot$time != 'pmop')
 
-params_mle_parab_basic = k_folder(sf_2022_npmrds_2025_plot$avgspd[row_select], 
-                                  sf_2022_npmrds_2025_plot$avgvol[row_select]/sf_2022_npmrds_2025_plot$lane[row_select], 
-                                  nll_parab, initial = c(10, 1, 1), lower = c(0, 1, 1e-6), upper = c(70, 100, Inf))
+# params_mle_parab_basic = k_folder(sf_2022_npmrds_2025_plot$avgspd[row_select], 
+#                                  sf_2022_npmrds_2025_plot$avgvol[row_select]/sf_2022_npmrds_2025_plot$lane[row_select], 
+#                                  nll_parab, initial = c(10, 1, 1), lower = c(0, 1, 1e-6), upper = c(70, 100, Inf))
 
 
 
@@ -189,7 +189,7 @@ x_y_bycategory(sf_2022_npmrds_2025_plot$avgvol[row_select]/sf_2022_npmrds_2025_p
                vdf_fitting_sf_npmrds_basic$fitted_value$ffspd, 
                sort(unique(vdf_fitting_sf_npmrds_basic$fitted_value$ffspd)), 
                
-               'Flow (veh/hr/ln)', 'Speed (mph)', 'Flow-Speed, calibrated', 
+               'Flow (veh/hr/ln)', 'Speed (mph)', 'Flow-Speed, field data and calibrated, BASIC', 
                
                '', 1, 'Legend')
 lines(x_vals, y_vals, col = 'red', lty = 2, lwd = 2)
@@ -221,9 +221,9 @@ row_select = which(sf_2022_npmrds_2025_plot$weavetype == 'MD' &
                      sf_2022_npmrds_2025_plot$time != 'amop' &
                      sf_2022_npmrds_2025_plot$time != 'pmop')
 
-params_mle_parab_md = k_folder(sf_2022_npmrds_2025_plot$avgspd[row_select], 
-                                  sf_2022_npmrds_2025_plot$avgvol[row_select]/sf_2022_npmrds_2025_plot$lane[row_select], 
-                                  nll_parab, initial = c(10, 1, 1), lower = c(0, 1, 1e-6), upper = c(70, 100, Inf))
+# params_mle_parab_md = k_folder(sf_2022_npmrds_2025_plot$avgspd[row_select], 
+#                                  sf_2022_npmrds_2025_plot$avgvol[row_select]/sf_2022_npmrds_2025_plot$lane[row_select], 
+#                                  nll_parab, initial = c(10, 1, 1), lower = c(0, 1, 1e-6), upper = c(70, 100, Inf))
 
 
 
@@ -271,20 +271,20 @@ x_vals <- params_mle_parab_md$b_mean * (params_mle_parab_md$a_mean - y_vals) * y
 
 png("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plot/SideFire_NPMRDS/VDF_MLE_md_PK_v_speed_filtered.png",
     width = 800, height = 600, bg = 'black')
-label_text_vdf <- paste0(
-  "Calib params: ", paste(round(vdf_fitting_sf_npmrds_md$params_best$a_mean,0),
-                          round(vdf_fitting_sf_npmrds_md$params_best$e_mean,4),
-                          sep = ', '), "\n",
-  "\n",
-  
-  "No. Obs: ", nrow(data), "\n",
-  
-  "% Error: ", round(vdf_fitting_sf_npmrds_md$metrics_best$percent_error,2), '%', "\n",
-  
-  "RMSE: ", round(vdf_fitting_sf_npmrds_md$metrics_best$rmse,4), '\n',
-  
-  "% RSQ: ", round(vdf_fitting_sf_npmrds_md$metrics_best$r_squared * 100, 2), '%'
-)
+# label_text_vdf <- paste0(
+#  "Calib params: ", paste(round(vdf_fitting_sf_npmrds_md$params_best$a_mean,0),
+#                          round(vdf_fitting_sf_npmrds_md$params_best$e_mean,4),
+#                          sep = ', '), "\n",
+#  "\n",
+#  
+#  "No. Obs: ", nrow(data), "\n",
+#  
+#  "% Error: ", round(vdf_fitting_sf_npmrds_md$metrics_best$percent_error,2), '%', "\n",
+#  
+#  "RMSE: ", round(vdf_fitting_sf_npmrds_md$metrics_best$rmse,4), '\n',
+#  
+#  "% RSQ: ", round(vdf_fitting_sf_npmrds_md$metrics_best$r_squared * 100, 2), '%'
+# )
 
 # x_y_bycategory = function(x, y, x_hat, y_hat, category, category_uniq, xlab, ylab, title, label, legend, legend.title) {
 x_y_bycategory(sf_2022_npmrds_2025_plot$avgvol[row_select]/sf_2022_npmrds_2025_plot$lane[row_select], 
@@ -296,9 +296,9 @@ x_y_bycategory(sf_2022_npmrds_2025_plot$avgvol[row_select]/sf_2022_npmrds_2025_p
                vdf_fitting_sf_npmrds_md$fitted_value$ffspd, 
                sort(unique(vdf_fitting_sf_npmrds_md$fitted_value$ffspd)), 
                
-               'Flow (veh/hr/ln)', 'Speed (mph)', 'Flow-Speed, calibrated', 
+               'Flow (veh/hr/ln)', 'Speed (mph)', 'Flow-Speed, field data and calibrated, MD', 
                
-               label_text_vdf, 1, 'Legend')
+               '', 1, 'Legend')
 lines(x_vals, y_vals, col = 'red', lty = 2, lwd = 2)
 lines(c(params_mle_parab_md$b_mean*35*(params_mle_parab_md$a_mean-35),2000),c(35,35), col = 'red', lty = 2, lwd = 2)
 dev.off()

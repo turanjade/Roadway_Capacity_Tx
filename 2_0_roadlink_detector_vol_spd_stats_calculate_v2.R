@@ -147,7 +147,7 @@ sidefire_vol_spd_2022$volmaxperlane = sidefire_vol_spd_2022$volmax_s/sidefire_vo
 sidefire_vol_spd_2022$volboxupperperlane = sidefire_vol_spd_2022$volboxupper_s/sidefire_vol_spd_2022$lane
 
 
-################################################## create a df that stores all the records from vol_per_day_2022_linkmatch ####################
+################################################## create a df that stores all the records from vol_per_day_2022_feb_workday ####################
 vol_per_day_2022_feb_workday_transpose = matrix(0, nrow = 0, ncol = 13)
 
 amvolcol = seq(46, 52); amspdcol = seq(139, 145)
@@ -231,4 +231,4 @@ if (length(which(is.na(vol_per_day_2022_feb_workday_transpose$vol))) > 0) {
   vol_per_day_2022_feb_workday_transpose = vol_per_day_2022_feb_workday_transpose[-which(is.na(vol_per_day_2022_feb_workday_transpose$vol)),]
 }
 
-rm(i, amvolcol, pmvolcol, amopvolcol, pmopvolcol, amopspdcol, pmopspdcol)
+rm(i, amvolcol, pmvolcol, amopvolcol, pmopvolcol, amopspdcol, pmopspdcol, amspdcol, pmspdcol)

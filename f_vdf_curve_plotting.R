@@ -66,7 +66,7 @@ x_y_bycategory = function(x, y, x_hat, y_hat, category, category_uniq, xlab, yla
     legend(x = legend_x, y = legend_y,
            legend = category_uniq,
            col = colors_deep[2:(length(category_uniq) + 1)],
-           pch = c(16, 16, 16, 16),
+           pch = rep(16, n = length(category_uniq)),
            title = legend.title,
            x.intersp = 0.5,              # Reduces space between symbol and text
            y.intersp = 1,              # Reduces vertical spacing between items
