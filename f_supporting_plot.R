@@ -57,3 +57,37 @@ annotate_stats <- function(label) {
 }
 
 
+
+### plot x y in black
+plot_black = function(x, y, xlab, ylab, main) {
+  par(bg = 'black')
+  plot(x, y,
+       pch = 16, 
+       # size = 2,
+       col = 'white', # Axis label color
+       
+       col.lab = "white", cex = 2,
+       
+       # Tick label color
+       col.axis = "white",
+       
+       # Title color
+       col.main = "white",
+       
+       # specify font
+       cex.main = 2,
+       cex.lab = 2,          # Enlarge axis labels
+       font.lab = 2,           # Bold axis labels
+       
+       # Turn off default axes to customize them
+       axes = FALSE,
+       xlim = c(min(c(x,y)), max(c(x,y))), ylim = c(min(c(x,y)), max(c(x,y))),
+       xlab = xlab, ylab = ylab, main = main
+       )
+  
+  # Add x and y axes manually
+  axis(1, col = "white", col.axis = "white", cex.axis = 2, font.axis = 2)
+  axis(2, col = "white", col.axis = "white", cex.axis = 2, font.axis = 2)
+  abline(a = 0, b = 1, col = "yellow", lty = 2)  # Adds x = y line
+}
+

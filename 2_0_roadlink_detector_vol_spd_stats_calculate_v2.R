@@ -50,9 +50,10 @@ sidefire_vol_spd_2022 = data.frame(cbind(sidefire_linkmatch_frwy_2025$sf_id, sid
                                          sidefire_linkmatch_frwy_2025$length,
                                          sidefire_linkmatch_frwy_2025$amffspd, 
                                          sidefire_linkmatch_frwy_2025$amlane, 
-                                         sidefire_linkmatch_frwy_2025$amhrcap))
+                                         sidefire_linkmatch_frwy_2025$amhrcap,
+                                         sidefire_linkmatch_frwy_2025$amwvhrcap))
 
-colnames(sidefire_vol_spd_2022) = c('ID_detector', 'ID_Road', 'TMC', 'weavetype','areatype','length','ffspd','lane','hrcap')
+colnames(sidefire_vol_spd_2022) = c('ID_detector', 'ID_Road', 'TMC', 'weavetype','areatype','length','ffspd','lane','hrcap','wvhrcap')
 
 sidefire_vol_spd_2022$vol90 = 0; sidefire_vol_spd_2022$vol95 = 0; 
 sidefire_vol_spd_2022$vol975 = 0; sidefire_vol_spd_2022$vol99 = 0; 
@@ -119,7 +120,7 @@ sidefire_vol_spd_2022 = sidefire_vol_spd_2022[-as.numeric(missingsensors[,1]),]
 
 sidefire_vol_spd_2022 = data.frame(sidefire_vol_spd_2022)
 ## convert all values to numeric
-for (i in 6:21) {
+for (i in 6:22) {
   sidefire_vol_spd_2022[,i] = as.numeric(sidefire_vol_spd_2022[,i])
 }
 
@@ -136,28 +137,59 @@ library('openxlsx')
 # write.xlsx(sidefire_vol_spd_2022, '20250410_capacity_recalculation\\RoadNetwork_2026\\Sensor_count\\05072025_sidefire_vol_spd_2022_stats.xlsx', 
 #           rowNames = F)
 
-rm(boxupperIndex, maxIndex, q90Index, q95Index, q975Index, q99Index, spdcol, volcol, wb, spdarray_i, volarray_i, missingsensors, link_i, i)
+rm(boxupperIndex, maxIndex, q90Index, q95Index, q975Index, q99Index, spdcol, volcol, wb, spdarray_i, volarray_i, missingsensors, link_i, i, spdcol, volcol, row_to_select, sidefire_ID)
 
 ################################################## make summary table for different weave types ####################
 ## calculate per lane vol & capacity. Now per lane is scaled up value
 sidefire_vol_spd_2022$hrcapperlane = sidefire_vol_spd_2022$hrcap/sidefire_vol_spd_2022$lane
+sidefire_vol_spd_2022$wvhrcapperlane = sidefire_vol_spd_2022$wvhrcap/sidefire_vol_spd_2022$lane
 sidefire_vol_spd_2022$vol90perlane = sidefire_vol_spd_2022$vol90_s/sidefire_vol_spd_2022$lane
 sidefire_vol_spd_2022$vol95perlane = sidefire_vol_spd_2022$vol95_s/sidefire_vol_spd_2022$lane
 sidefire_vol_spd_2022$volmaxperlane = sidefire_vol_spd_2022$volmax_s/sidefire_vol_spd_2022$lane
 sidefire_vol_spd_2022$volboxupperperlane = sidefire_vol_spd_2022$volboxupper_s/sidefire_vol_spd_2022$lane
 
 
+################################## organize as plottable format ##################################
+sidefire_vol_spd_2022_plot = cbind(sidefire_vol_spd_2022$ID_detector,
+                                   sidefire_vol_spd_2022$ID_Road,
+                                   sidefire_vol_spd_2022$TMC,
+                                   sidefire_vol_spd_2022$weavetype,
+                                   sidefire_vol_spd_2022$areatype,
+                                   sidefire_vol_spd_2022$ffspd,
+                                   sidefire_vol_spd_2022$length,
+                                   sidefire_vol_spd_2022$lane,
+                                   sidefire_vol_spd_2022$hrcapperlane,
+                                   sidefire_vol_spd_2022$wvhrcapperlane,
+                                            rbind(cbind('q90', sidefire_vol_spd_2022$vol90_s, sidefire_vol_spd_2022$spd90),
+                                                  cbind('q95', sidefire_vol_spd_2022$vol95_s, sidefire_vol_spd_2022$spd95),
+                                                  cbind('qboxupper', sidefire_vol_spd_2022$volboxupper_s, sidefire_vol_spd_2022$spdboxupper),
+                                                  cbind('qmax', sidefire_vol_spd_2022$volmax_s, sidefire_vol_spd_2022$spdmax)))
+
+sidefire_vol_spd_2022_plot = data.frame(sidefire_vol_spd_2022_plot)
+
+for (i in 7:10) {
+  sidefire_vol_spd_2022_plot[,i] = as.numeric(sidefire_vol_spd_2022_plot[,i])
+}
+sidefire_vol_spd_2022_plot[,12] = as.numeric(sidefire_vol_spd_2022_plot[,12])
+sidefire_vol_spd_2022_plot[,13] = as.numeric(sidefire_vol_spd_2022_plot[,13])
+
+colnames(sidefire_vol_spd_2022_plot) = c('ID_detector', 'ID_Road', 'TMC', 'weavetype','areatype',
+                                                  'ffspd', 'length', 'lane', 'hrcapperlane', 'wvhrcapperlane', 'voltype', 'stats_vol_scaled', 'spd')
+
+sidefire_vol_spd_2022_plot$volperlane = sidefire_vol_spd_2022_plot$stats_vol_scaled/sidefire_vol_spd_2022_plot$lane
+
 ################################################## create a df that stores all the records from vol_per_day_2022_feb_workday ####################
-vol_per_day_2022_feb_workday_transpose = matrix(0, nrow = 0, ncol = 13)
+vol_per_day_2022_feb_workday_transpose = matrix(0, nrow = 0, ncol = 14)
 
 amvolcol = seq(46, 52); amspdcol = seq(139, 145)
 pmvolcol = seq(80, 90); pmspdcol = seq(173, 183)
-amopvolcol = seq(32, 36); amopspdcol = seq(125, 129)
-pmopvolcol = seq(104, 108); pmopspdcol = seq(197, 201)
+amopvolcol = seq(32, 40); amopspdcol = seq(125, 133)
+pmopvolcol = seq(100, 108); pmopspdcol = seq(193, 201)
 
 for (i in 1:nrow(vol_per_day_2022_feb_workday)) {
   vol_per_day_2022_feb_workday_transpose = rbind(vol_per_day_2022_feb_workday_transpose,
-                                               cbind(vol_per_day_2022_feb_workday$LinkID[i], 
+                                               cbind(# sf ID
+                                                     vol_per_day_2022_feb_workday$LinkID[i], 
                                                      # rdwy ID
                                                      sidefire_linkmatch_frwy_2025$rdwy_id[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
                                                      # TMC
@@ -175,50 +207,33 @@ for (i in 1:nrow(vol_per_day_2022_feb_workday)) {
                                                      # cap per lane from TAFT
                                                      sidefire_linkmatch_frwy_2025$amhrcap[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])]/
                                                        sidefire_linkmatch_frwy_2025$amlane[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # cap per lane from sidefire data
-                                                     sidefire_linkmatch_frwy_2025$sfcapperlane[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # pk
-                                                     'PK',
-                                                     t(vol_per_day_2022_feb_workday[i, c(amvolcol,pmvolcol)]), 
-                                                     t(vol_per_day_2022_feb_workday[i, c(amspdcol,pmspdcol)])
-                                                     ),
-                                               cbind(vol_per_day_2022_feb_workday$LinkID[i], 
-                                                     # rdwy ID
-                                                     sidefire_linkmatch_frwy_2025$rdwy_id[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # TMC
-                                                     sidefire_linkmatch_frwy_2025$TMC[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # weave type
-                                                     sidefire_linkmatch_frwy_2025$weavetype[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # area type
-                                                     sidefire_linkmatch_frwy_2025$areatype[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # length
-                                                     sidefire_linkmatch_frwy_2025$length[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # lane
-                                                     sidefire_linkmatch_frwy_2025$amlane[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # ffspd
-                                                     sidefire_linkmatch_frwy_2025$amffspd[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # cap per lane from TAFT
-                                                     sidefire_linkmatch_frwy_2025$amhrcap[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])]/
+                                                     # cap per lane from TAFT - weave
+                                                     sidefire_linkmatch_frwy_2025$amwvhrcap[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])]/
                                                        sidefire_linkmatch_frwy_2025$amlane[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
                                                      # cap per lane from sidefire data
                                                      sidefire_linkmatch_frwy_2025$sfcapperlane[which(sidefire_linkmatch_frwy_2025$sf_id == vol_per_day_2022_feb_workday$LinkID[i])],
-                                                     # op
-                                                     'OP',
-                                                     t(vol_per_day_2022_feb_workday[i, c(amopvolcol,pmopvolcol)]), 
-                                                     t(vol_per_day_2022_feb_workday[i, c(amopspdcol,pmopspdcol)])
+                                                     rbind(cbind(# pk
+                                                       'PK',
+                                                       t(vol_per_day_2022_feb_workday[i, c(amvolcol,pmvolcol)]), 
+                                                       t(vol_per_day_2022_feb_workday[i, c(amspdcol,pmspdcol)])),
+                                                       cbind(# op
+                                                         'OP',
+                                                         t(vol_per_day_2022_feb_workday[i, c(amopvolcol,pmopvolcol)]), 
+                                                         t(vol_per_day_2022_feb_workday[i, c(amopspdcol,pmopspdcol)])))
                                                ))
 }
+
 vol_per_day_2022_feb_workday_transpose = data.frame(vol_per_day_2022_feb_workday_transpose)
 
 colnames(vol_per_day_2022_feb_workday_transpose) = c(
-  'sf_id','rdwy_id','TMC','weavetype','areatype','length','lane','ffspd','hrcapperlane','sfcapperlane','time','vol','spd'
+  'sf_id','rdwy_id','TMC','weavetype','areatype','length','lane','ffspd','hrcapperlane','wvhrcapperlane','sfcapperlane','time','vol','spd'
 )
 
-for (i in 6:10) {
+for (i in 6:11) {
   vol_per_day_2022_feb_workday_transpose[,i] = as.numeric(vol_per_day_2022_feb_workday_transpose[,i])
 }
 
-for (i in 12:13) {
+for (i in 13:14) {
   vol_per_day_2022_feb_workday_transpose[,i] = as.numeric(vol_per_day_2022_feb_workday_transpose[,i])
 }
 

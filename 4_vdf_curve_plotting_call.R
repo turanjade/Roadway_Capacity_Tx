@@ -1,7 +1,7 @@
 ## this file calls vdf_curve_plotting functions to plot 
 
 
-data = vdf_fitting_sf_npmrds_basic$fitted_value
+data = vdf_fitting_sf_npmrds_A$fitted_value
 vc = data$x
 flow = data$x * data$cap
 
@@ -13,8 +13,8 @@ spd_hat_init = as.numeric(data$length)/data$t_hat_init
 
 speed = data$ffspd
 speed_uniq = sort(unique(speed))
-params = c(vdf_fitting_sf_npmrds_basic$params_best$a_mean, vdf_fitting_sf_npmrds_basic$params_best$e_mean)
-metrics = vdf_fitting_sf_npmrds_basic$metrics_best
+params = c(vdf_fitting_sf_npmrds_A$params_best$a_mean, vdf_fitting_sf_npmrds_A$params_best$e_mean)
+metrics = vdf_fitting_sf_npmrds_A$metrics_best
 
 # vc ratio
 
