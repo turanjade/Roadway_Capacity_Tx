@@ -20,7 +20,7 @@ sf_2022_npmrds_2025_vdf = data.frame(x = sf_2022_npmrds_2025_plot$vdf_x,
                                      time = sf_2022_npmrds_2025_plot$time)
 
 
-vdf_fitting_sf_npmrds_frwybasic = VDF_fitting(sf_2022_npmrds_2025_vdf, 
+vdf_fitting_sf_npmrds_frwybasic = VDF_fitting(sf_2022_npmrds_2025_vdf_frwybasic, 
                                               'FRWY_BASIC',
                                               c('am','pm'),
                                               'npm',
@@ -57,3 +57,47 @@ vdf_fitting_sf_npmrds_A = VDF_fitting(sf_2022_npmrds_2025_vdf,
                                        bound_e = c(-Inf, 0),
                                        taft_params = c(8, -0.15),
                                        fn = nll_vdf)
+
+
+bpr_fitting_sf_npmrds_frwybasic = BPR_fitting(sf_2022_npmrds_2025_vdf_frwybasic, 
+                                              'FRWY_BASIC',
+                                              c('am','pm'),
+                                              'npm',
+                                              bound_a = c(0, seq(3,10)),
+                                              bound_b = c(0, 10),
+                                              taft_params = c(2, 4),
+                                              fn = nll_bpr)
+
+
+# only use TAFT t to calibrate frwy_basic data
+sf_2022_npmrds_2025_vdf_frwybasic_bpr = sf_2022_npmrds_2025_vdf_frwybasic
+for (i in 1:nrow(sf_2022_npmrds_2025_vdf_frwybasic_bpr)) {
+  sf_2022_npmrds_2025_vdf_frwybasic_bpr$t[i] = VDF(8, -0.15, sf_2022_npmrds_2025_vdf_frwybasic_bpr$t0[i], sf_2022_npmrds_2025_vdf_frwybasic_bpr$x[i])
+}
+bpr_fitting_sf_npmrds_frwybasic_field = BPR_fitting(sf_2022_npmrds_2025_vdf_frwybasic, 
+                                              'FRWY_BASIC',
+                                              c('am','pm'),
+                                              'npm',
+                                              bound_a = c(0, seq(3,10)),
+                                              bound_b = c(0, 10),
+                                              taft_params = c(2, 4),
+                                              fn = nll_bpr)
+
+bpr_fitting_sf_npmrds_frwybasic_taft = BPR_fitting(sf_2022_npmrds_2025_vdf_frwybasic_bpr, 
+                                                    'FRWY_BASIC',
+                                                    c('am','pm'),
+                                                    'npm',
+                                                    bound_a = c(0, seq(3,10)),
+                                                    bound_b = c(0, 10),
+                                                    taft_params = c(2, 4),
+                                                    fn = nll_bpr)
+
+bpr_arc_fitting_sf_npmrds_frwybasic_field = BPRarc_fitting(sf_2022_npmrds_2025_vdf_frwybasic, 
+                                                    'FRWY_BASIC',
+                                                    c('am','pm'),
+                                                    'npm',
+                                                    bound_a = c(0.1, seq(0.2,1,0.1)),
+                                                    bound_b = seq(0.1, 8, 1),
+                                                    bound_d = seq(0.1, 2, 0.5),
+                                                    bpr_params = c(0.1, 6, 0.6),
+                                                    fn = nll_bpr_arc)

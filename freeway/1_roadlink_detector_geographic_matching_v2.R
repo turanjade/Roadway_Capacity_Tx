@@ -76,7 +76,7 @@ for (i in 1:length(sidefire_ID)) {
     #initiate dir and name decision factor as 0. If it becomes 1 after the check, then it passes
     dir_j = 0; name_j = 0 
     ############################################# check dir by street name & sidefire name ##########################################
-    if (isTRUE(grepl('NB', link_i$LINKNAME[j])) & isTRUE(grepl('NB', link_i$STREET[j])) | 
+    if (isTRUE(grepl('NB', link_i$LINKNAME[j])) & isTRUE(grepl('NB', link_i$STREET[j])) | # linkname is from sidefire detector, street is from roadlink
         isTRUE(grepl('SB', link_i$LINKNAME[j])) & isTRUE(grepl('SB', link_i$STREET[j])) | 
         isTRUE(grepl('WB', link_i$LINKNAME[j])) & isTRUE(grepl('WB', link_i$STREET[j])) | 
         isTRUE(grepl('EB', link_i$LINKNAME[j])) & isTRUE(grepl('EB', link_i$STREET[j]))) {

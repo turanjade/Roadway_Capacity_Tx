@@ -295,7 +295,7 @@ sidefire_vol_spd_2022_filtered_plot$volperlane = sidefire_vol_spd_2022_filtered_
 
 ################################### plot violin distribution #################################################################
 # Compute 95th percentiles per variable. sidefire_vol_spd_2022_filtered_plot, only FRWY_BASIC, BASIC, MD included
-hist_type = c('MD', '60')
+hist_type = c('FRWY_BASIC', '75')
 
 ## summarize quantile for line marker
 violin_quantiles_95 <- sidefire_vol_spd_2022_filtered_plot[which(sidefire_vol_spd_2022_filtered_plot$weavetype == hist_type[1] &
@@ -315,13 +315,13 @@ png(paste0("20250410_capacity_recalculation/RoadNetwork_2026/Data_processing/Plo
 ggplot(sidefire_vol_spd_2022_filtered_plot[which(sidefire_vol_spd_2022_filtered_plot$weavetype == hist_type[1] &
                                           sidefire_vol_spd_2022_filtered_plot$ffspd == hist_type[2]),], aes(x = factor(voltype), y = as.numeric(volperlane))) +
   geom_violinhalf(trim = FALSE, fill = "skyblue", color = 'grey', scale = "width") + 
-  geom_hline(aes(yintercept = wvhrcap), color = "yellow", linetype = "dashed", linewidth = 2) + 
-  annotate('text', 
-           x = 0.5, y = wvhrcap + 50,  # 1 unit above the line
-           label = as.character(wvhrcap), 
-           fontface = "bold",          # Font style: plain, bold, italic, bold.italic
-           size = 10,
-           hjust = 0, vjust = 0, color = "yellow") +
+#  geom_hline(aes(yintercept = wvhrcap), color = "yellow", linetype = "dashed", linewidth = 2) + 
+#  annotate('text', 
+#           x = 0.5, y = wvhrcap + 50,  # 1 unit above the line
+#           label = as.character(wvhrcap), 
+#           fontface = "bold",          # Font style: plain, bold, italic, bold.italic
+#           size = 10,
+#           hjust = 0, vjust = 0, color = "yellow") +
   geom_hline(aes(yintercept = hrcap), color = "green", linetype = "dashed", linewidth = 2) + 
   annotate('text', 
            x = 0.5, y = hrcap + 50,  # 1 unit above the line
