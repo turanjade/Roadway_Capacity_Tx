@@ -1,3 +1,14 @@
+##### data memo
+## signal_oct2024am_xxx: data from signal analytics, which comes from probe vehicles representing 2-8% of the traffic stream. Delay & travel time included
+##### Each sampled vehicle is assigned to a 230-meter zone (one for each movement); they also provide the framework to calculate travel times, 
+##### control delays, and whether or not a vehicle is regarded as having stopped within the intersection.
+
+## NPMRDS_202410_tmclink_spdVol: shp from db [TravelTimes].[dbo].[HourlySpeedsByTMC_October_2024], calculate workday avg spd & vol per hour, calculate mean TT
+
+## Arterial_MatchedTMC_1: shp from roadlink 2026, that are closest to the existing recorded intersections from signal analytics, only FUNCL 234 are included
+## NPMRDS_202410_intersection: shp read from signal analytics intersection (delete dup intersection ID)
+
+
 ### this file specifies the matching of npmrds and roadlink
 library('arcgisbinding')
 library('sf')
@@ -176,3 +187,101 @@ signal_oct2024am_intersect_lines <- signal_oct2024am_intersect_points %>%
 st_write(signal_oct2024am_intersect_lines, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Arterial_MatchedTMC_1.shp',
          delete_layer = T)
 
+###### third, check intersections with duplicated movements or approaches, save as dup csv, filter out, save filtered intersection ######
+# check any dup approaches for all intersections and record ID
+ID_dupapproach = array(NA, dim = 0)
+number_dupapproach = 0
+for (i in 1:nrow(signal_oct2024am_intersect_nodup)) {
+  approach_i = signal_oct2024am_approach$Approach[which(
+    signal_oct2024am_approach$ID == signal_oct2024am_intersect_nodup$ID[i]
+  )]
+  if (any(duplicated(approach_i))) {
+    ID_dupapproach = c(ID_dupapproach, signal_oct2024am_intersect_nodup$ID[i])
+    number_dupapproach = number_dupapproach + 1
+  }
+}
+
+# check any dup movements at each intersection & approaches and record ID
+ID_dupmovement = array(NA, dim = 0)
+number_dupmovement = 0
+for (i in 1:nrow(signal_oct2024am_intersect_nodup)) {
+  approach_i = signal_oct2024am_approach$Approach[which(
+    signal_oct2024am_approach$ID == signal_oct2024am_intersect_nodup$ID[i]
+  )]
+  for (j in 1:length(approach_i)) {
+    movement_ij = signal_oct2024am_movement$Movement[which(
+      signal_oct2024am_movement$ID == signal_oct2024am_intersect_nodup$ID[i] &
+        signal_oct2024am_movement$Approach == approach_i[j]
+    )]
+    if (any(duplicated(movement_ij))) {
+      ID_dupmovement = c(ID_dupmovement, signal_oct2024am_intersect_nodup$ID[i])
+      number_dupmovement = number_dupmovement + 1
+    }
+  }
+  
+}
+ID_dupmovement = ID_dupmovement[!duplicated(ID_dupmovement)]
+
+# save IDs of intersection with either dup approach or dup movement, remove dup IDs
+ID_dupappormove = c(ID_dupmovement, ID_dupapproach)
+ID_dupappormove = ID_dupappormove[!duplicated(ID_dupappormove)]
+
+rm(approach_i, movement_ij, i, j)
+rm(sample_approach, sample_movement, sample_intersect)
+
+# save dup approach or movements to csv
+ID_dupapproach = data.frame(cbind(ID_dupapproach, ID_dupapproach)); 
+colnames(ID_dupapproach) = c('id_1','id_2')
+dupapproach <- signal_oct2024am_approach %>%
+  left_join(data.frame(ID_dupapproach),
+            by = c('ID' = 'id_1'))
+dupapproach = dupapproach[!is.na(dupapproach$id_2),]
+
+ID_dupmovement = data.frame(cbind(ID_dupmovement, ID_dupmovement)); 
+colnames(ID_dupmovement) = c('id_1','id_2')
+dupmovement <- signal_oct2024am_movement %>%
+  left_join(data.frame(ID_dupmovement),
+            by = c('ID' = 'id_1'))
+dupmovement = dupmovement[!is.na(dupmovement$id_2),]
+
+write.csv(dupapproach, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Dup_Approach.csv', row.names = F)
+write.csv(dupmovement, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Dup_Movement.csv', row.names = F)
+
+### delete those intersections that do not have duplicated movements or approaches
+signal_oct2024am_intersect_nodup <- signal_oct2024am_intersect_nodup %>%
+  left_join(ID_dupapproach, by = c("ID" = 'id_1'))
+signal_oct2024am_intersect_nodup <- signal_oct2024am_intersect_nodup %>%
+  left_join(ID_dupmovement, by = c("ID" = 'id_1'))
+signal_oct2024am_intersect_filtered = signal_oct2024am_intersect_nodup[which(is.na(signal_oct2024am_intersect_nodup$id_2.x)),]
+signal_oct2024am_intersect_filtered = signal_oct2024am_intersect_filtered[which(is.na(signal_oct2024am_intersect_filtered$id_2.y)),]
+# select filtered approaches 
+signal_oct2024am_approach <- signal_oct2024am_approach %>%
+  left_join(ID_dupapproach, by = c("ID" = 'id_1'))
+signal_oct2024am_approach <- signal_oct2024am_approach %>%
+  left_join(ID_dupmovement, by = c("ID" = 'id_1'))
+signal_oct2024am_approach_filtered = signal_oct2024am_approach[which(is.na(signal_oct2024am_approach$id_2.x)),]
+signal_oct2024am_approach_filtered = signal_oct2024am_approach_filtered[which(is.na(signal_oct2024am_approach_filtered$id_2.y)),]
+# select filtered movements
+signal_oct2024am_movement <- signal_oct2024am_movement %>%
+  left_join(ID_dupapproach, by = c("ID" = 'id_1'))
+signal_oct2024am_movement <- signal_oct2024am_movement %>%
+  left_join(ID_dupmovement, by = c("ID" = 'id_1'))
+signal_oct2024am_movement_filtered = signal_oct2024am_movement[which(is.na(signal_oct2024am_movement$id_2.x)),]
+signal_oct2024am_movement_filtered = signal_oct2024am_movement_filtered[which(is.na(signal_oct2024am_movement_filtered$id_2.y)),]
+
+# create a simplified intersection file - filtered
+signal_oct2024am_intersect_points_filtered = data.frame(cbind(
+  signal_oct2024am_intersect_filtered$ID,
+  signal_oct2024am_intersect_filtered$Intersection, 
+  signal_oct2024am_intersect_filtered$Intersection.ID,
+  signal_oct2024am_intersect_filtered$Longitude, 
+  signal_oct2024am_intersect_filtered$Latitude
+))
+colnames(signal_oct2024am_intersect_points_filtered) = c(
+  'uniqId',
+  'intersection','intersectionId','lon','lat'
+)
+# convert to points, then save to intersection
+signal_oct2024am_intersect_points_filtered_sf <- st_as_sf(signal_oct2024am_intersect_points_filtered, 
+                                                 coords = c("lon", "lat"), crs = 4326)
+st_write(signal_oct2024am_intersect_points_filtered_sf, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\NPMDRS_202410_Intersection_filtered.shp', delete_layer = T)
