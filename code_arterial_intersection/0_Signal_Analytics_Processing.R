@@ -12,23 +12,30 @@
 ### this file specifies the matching of npmrds and roadlink
 library('arcgisbinding')
 library('sf')
-library('dplyr')
+library(dplyr)
+library(tidyr)
 library('openxlsx')
 library(geosphere)
+library('DBI')
+library('odbc')
+library('ggplot2')
+library(leaflet)
 
 
 setwd("C:\\Users\\rtu\\OneDrive - The North Central Texas Council of Governments\\Documents\\0_ModelDataDevelopment")
 
+### read base data
 sidefire2025 = st_read('20250410_capacity_recalculation\\RoadNetwork_2026\\ArcGIS\\Sidefire_2025\\sidefire_2025.shp')
 roadlink_2026 = st_read('20250410_capacity_recalculation\\RoadNetwork_2026\\ArcGIS\\RDWY\\road_shp_addedinfo.shp')
 taz_2026 = st_read('20250410_capacity_recalculation\\RoadNetwork_2026\\ArcGIS\\TAZ\\taz_shp.shp')
+roadlink_26_ab = read.csv('20250410_capacity_recalculation\\RoadNetwork_2026\\YR26_JAN2024_RDWY_start_end_added.csv', header = T)
+roadlink_26_mma = read.csv('20250410_capacity_recalculation\\RoadNetwork_2026\\Y26_TAFT_Assignment_AM_MMA_LinkFlows5.csv', header = T)
 
 sidefire_2025 <- sidefire2025 %>%
   select(ID, LINKNAME, FUNCL, DIR, TMC, geometry)
 colnames(sidefire_2025) = c('ID', 'LINKNAME', 'FUNCL', 'DIR', 'TMC', 'geometry')
 
-###### first, convert Oct average (with starting and ending points) to link polyline and find examples #######
-# examples found combined with arcgis: row ID 42 48 73 75 78 82
+############################### first, convert Oct average (with starting and ending points) to link polyline and find examples #######
 tmc_oct2024 = data.frame(read.csv('20250410_capacity_recalculation\\Database\\TMC_2024_OctHrSpd.csv', header = T))
 tmc_2024loc = data.frame(read.csv('20250410_capacity_recalculation\\Database\\TMC_location_2024.csv', header = T, fileEncoding = "latin1"))
 
@@ -58,43 +65,86 @@ library(dplyr)
 filtered_data <- tmcoct2024_hrspd %>%
   filter(DOW != 1 & DOW != 7)
 
-# Calculate mean for columns 6–29 and 31–54 grouped by tmc_code
+
+### Calculate AM mean spd and mean vol
+mean_AM_data <- filtered_data %>%
+  group_by(tmc_code) %>%
+  summarise(
+    across(11:13, ~mean(.x, na.rm = TRUE), .names = "mean_{.col}"),
+    across(36:38, ~mean(.x, na.rm = TRUE), .names = "mean_{.col}")
+  )
+
+mean_AM_data$mean_SpdAM = rowMeans(cbind(mean_AM_data$mean_SpdTMC06, mean_AM_data$mean_SpdTMC07, mean_AM_data$mean_SpdTMC08), na.rm = T)
+mean_AM_data$tot_ColAM = rowSums(cbind(mean_AM_data$mean_Vol_TMC_06, mean_AM_data$mean_Vol_TMC_07, mean_AM_data$mean_Vol_TMC_08), na.rm = T)
+
+# Join back to your output frame by tmc_code
+tmc_oct2024_workdayavg_AM <- tmc_oct2024_workdayavg[,c(1,5)] %>%
+  left_join(mean_AM_data, by = "tmc_code")
+
+tmc_oct2024_workdayavg_AM <- tmc_oct2024_workdayavg_AM %>%
+  left_join(tmc_2024loc_line %>% select(Funcl, road, dir, intersection, miles, 
+                                        thrulanes, thrulanes_unidir, tmc, geometry), 
+            by = c("tmc_code" = "tmc"))
+# calculate average travel time
+tmc_oct2024_workdayavg_AM$mean_TT = tmc_oct2024_workdayavg_AM$miles/tmc_oct2024_workdayavg_AM$mean_SpdAM * 3600 # to second
+
+### Calculate PM mean spd and mean vol
+mean_PM_data <- filtered_data %>%
+  group_by(tmc_code) %>%
+  summarise(
+    across(21:23, ~mean(.x, na.rm = TRUE), .names = "mean_{.col}"),
+    across(46:48, ~mean(.x, na.rm = TRUE), .names = "mean_{.col}")
+  )
+
+mean_PM_data$mean_SpdPM = rowMeans(cbind(mean_PM_data$mean_SpdTMC16, mean_PM_data$mean_SpdTMC17, mean_PM_data$mean_SpdTMC18), na.rm = T)
+mean_PM_data$tot_ColPM = rowSums(cbind(mean_PM_data$mean_Vol_TMC_16, mean_PM_data$mean_Vol_TMC_17, mean_PM_data$mean_Vol_TMC_18), na.rm = T)
+
+# Join back to your output frame by tmc_code
+tmc_oct2024_workdayavg_PM <- tmc_oct2024_workdayavg[,c(1,5)] %>%
+  left_join(mean_PM_data, by = "tmc_code")
+
+tmc_oct2024_workdayavg_PM <- tmc_oct2024_workdayavg_PM %>%
+  left_join(tmc_2024loc_line %>% select(Funcl, road, dir, intersection, miles, 
+                                        thrulanes, thrulanes_unidir, tmc, geometry), 
+            by = c("tmc_code" = "tmc"))
+# calculate average travel time
+tmc_oct2024_workdayavg_PM$mean_TT = tmc_oct2024_workdayavg_PM$miles/tmc_oct2024_workdayavg_PM$mean_SpdPM * 3600 # to second
+
+
+# Calculate daily mean for columns 6–29 and 31–54 grouped by tmc_code
 mean_data <- filtered_data %>%
   group_by(tmc_code) %>%
   summarise(
     across(5:28, ~mean(.x, na.rm = TRUE), .names = "mean_{.col}"),
     across(30:53, ~mean(.x, na.rm = TRUE), .names = "mean_{.col}")
   )
-
 # Join back to your output frame by tmc_code
 tmc_oct2024_workdayavg <- tmc_oct2024_workdayavg[,c(1,5)] %>%
   left_join(mean_data, by = "tmc_code")
-
 # Calculate average speed of all hour and attach to the end of the monthly hour average
 tmc_oct2024_workdayavg$SpdTMC_Day = rowMeans(tmc_oct2024_workdayavg[,3:26], na.rm = T)
 tmc_oct2024_workdayavg$Vol_TMC_Day = rowSums(tmc_oct2024_workdayavg[,27:50], na.rm = T)
-
+# add line geometry
 tmc_oct2024_workdayavg <- tmc_oct2024_workdayavg %>%
   left_join(tmc_2024loc_line %>% select(Funcl, road, dir, intersection, miles, 
                                         thrulanes, thrulanes_unidir, tmc, geometry), 
             by = c("tmc_code" = "tmc"))
-
+# calculate average travel time
 tmc_oct2024_workdayavg$mean_TT = tmc_oct2024_workdayavg$miles/tmc_oct2024_workdayavg$SpdTMC_Day * 3600 # to second
-
 # write data to shpfile
 st_write(tmc_oct2024_workdayavg, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\NPMDRS_202410_tmclink_spdVol.shp', delete_layer = T)
 
 rm(mean_data, filtered_data, sfc_geom, geoms, coords, con, i, j)
 
 
-###### second, convert approaching data to shapefile and find examples ######
+############################# second, convert approaching data to shapefile and find examples ###################
 signal_oct2024am_intersect = read.csv('20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Arterial_NPMRDS\\2024OctAM\\Intersection.csv', header = T)
 signal_oct2024am_approach = read.csv('20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Arterial_NPMRDS\\2024OctAM\\Approach.csv', header = T)
 signal_oct2024am_movement = read.csv('20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Arterial_NPMRDS\\2024OctAM\\Movement.csv', header = T)
 
 ### convert three files to GIS file in order to calculate distance
 
-### first, create ID for each intersection point. They do not match with each other
+## first, create ID for each intersection point. They do not match with each other
 # use rank + intersection to check if they are identical across three files 
 signal_oct2024am_intersect$ID = seq(1, nrow(signal_oct2024am_intersect))
 # signal_oct2024am_intersect$uniqName = paste(signal_oct2024am_intersect$Rank, signal_oct2024am_intersect$Intersection)
@@ -139,9 +189,10 @@ for (i in 1:nrow(signal_oct2024am_intersect_nodup)) {
     difnames_move = difnames_move + 1
   }
 }
+rm(signal_oct2024am_intersect_nodup)
 ## check complete. Intersection name with unique intersection.ID is the same
 
-###### Third, match intersection TMC points to roadlinks to get correct FUNCL, keep arterial (2,3,4) & ramp (6)
+############################## Third, match intersection TMC points to roadlinks to get correct FUNCL, keep arterial (2,3,4) & ramp (6)
 # Ensure both are in the same projected CRS (must use feet as unit!)
 # For example, NAD 1983 StatePlane Arizona East FIPS 0201 Feet
 # Replace with your actual CRS
@@ -187,7 +238,7 @@ signal_oct2024am_intersect_lines <- signal_oct2024am_intersect_points %>%
 st_write(signal_oct2024am_intersect_lines, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Arterial_MatchedTMC_1.shp',
          delete_layer = T)
 
-###### third, check intersections with duplicated movements or approaches, save as dup csv, filter out, save filtered intersection ######
+########################### check intersections with duplicated movements or approaches, save as dup csv, filter out, save filtered intersection ######
 # check any dup approaches for all intersections and record ID
 ID_dupapproach = array(NA, dim = 0)
 number_dupapproach = 0
@@ -247,7 +298,7 @@ dupmovement = dupmovement[!is.na(dupmovement$id_2),]
 write.csv(dupapproach, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Dup_Approach.csv', row.names = F)
 write.csv(dupmovement, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\Dup_Movement.csv', row.names = F)
 
-### delete those intersections that do not have duplicated movements or approaches
+### delete those intersections that have duplicated movements or approaches
 signal_oct2024am_intersect_nodup <- signal_oct2024am_intersect_nodup %>%
   left_join(ID_dupapproach, by = c("ID" = 'id_1'))
 signal_oct2024am_intersect_nodup <- signal_oct2024am_intersect_nodup %>%
@@ -285,3 +336,21 @@ colnames(signal_oct2024am_intersect_points_filtered) = c(
 signal_oct2024am_intersect_points_filtered_sf <- st_as_sf(signal_oct2024am_intersect_points_filtered, 
                                                  coords = c("lon", "lat"), crs = 4326)
 st_write(signal_oct2024am_intersect_points_filtered_sf, '20250410_capacity_recalculation\\RoadNetwork_2026\\INRIX\\NPMDRS_202410_Intersection_filtered.shp', delete_layer = T)
+
+
+############################### (no longer used) match link with intersection nodes, attach direction to each link ########################
+# convert intersection to node points
+roadlink_26_ab = read.csv('20250410_capacity_recalculation\\RoadNetwork_2026\\YR26_JAN2024_RDWY_start_end_added.csv', header = T)
+roadlink_26_mma = read.csv('20250410_capacity_recalculation\\RoadNetwork_2026\\Y26_TAFT_Assignment_AM_MMA_LinkFlows5.csv', header = T)
+intersections = st_as_sf(signal_oct2024am_approach_filtered, 
+                         coords = c("Longitude", "Latitude"), crs = 4326)
+
+lines <- roadlink_2026 %>%
+  left_join(roadlink_26_ab %>% select(ID, From.ID, From.Longitude, From.Latitude, To.ID, To.Longitude, To.Latitude), 
+            by = c('ID' = 'ID'))# LINESTRING, with fields AB and BA
+nodes <- intersections       # POINTs, one per approach direction
+
+roadlink_26_signalmatch = data.frame(matrix(0, nrow = 0, ncol = ncol(lines)))
+for (i in 1:nrow(lines)) {
+  roadlink_26_signalmatch = rbind(roadlink_26_signalmatch, match_link_movements(lines[i,], nodes, dist_threshold = 20))
+}

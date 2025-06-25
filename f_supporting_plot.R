@@ -58,15 +58,15 @@ annotate_stats <- function(label) {
 
 
 
-### plot x y in black
-plot_black = function(x, y, xlab, ylab, main) {
+### plot x y in black adding label
+plot_black = function(x, y, xlab, ylab, main, label) {
   par(bg = 'black')
   plot(x, y,
        pch = 16, 
        # size = 2,
        col = 'white', # Axis label color
        
-       col.lab = "white", cex = 2,
+       col.lab = "white", cex = 1.5,
        
        # Tick label color
        col.axis = "white",
@@ -81,7 +81,7 @@ plot_black = function(x, y, xlab, ylab, main) {
        
        # Turn off default axes to customize them
        axes = FALSE,
-       xlim = c(min(c(x,y)), max(c(x,y))), ylim = c(min(c(x,y)), max(c(x,y))),
+       xlim = c(min(c(x,y), na.rm = T), max(c(x,y), na.rm = T)), ylim = c(min(c(x,y), na.rm = T), max(c(x,y), na.rm = T)),
        xlab = xlab, ylab = ylab, main = main
        )
   
@@ -89,5 +89,10 @@ plot_black = function(x, y, xlab, ylab, main) {
   axis(1, col = "white", col.axis = "white", cex.axis = 2, font.axis = 2)
   axis(2, col = "white", col.axis = "white", cex.axis = 2, font.axis = 2)
   abline(a = 0, b = 1, col = "yellow", lty = 2)  # Adds x = y line
+  # add text
+  usr <- par("usr")
+  text(x = usr[2], y = usr[3], label, 
+       adj = c(1, 0), cex = 2, font = 2, col = 'white')
 }
+
 
