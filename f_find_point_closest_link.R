@@ -7,8 +7,6 @@ find_closest_linkmatch = function(line_, point_, buffer = 100) {
   # This creates a row for each line-point pair
   lines_within_100ft <- st_join(line_, points_buffer, join = st_intersects, left = FALSE)
   
-  ############################################# Option 1: Find FUNCL = 1 ##########################################
-  ############################################# Option 1: Find FUNCL = 1 ##########################################
   # option 2 is to use street name. First use FUNCL 
   lines_within_100ft_ = lines_within_100ft[which(!is.na(lines_within_100ft$ID.y)),] # remove na
   

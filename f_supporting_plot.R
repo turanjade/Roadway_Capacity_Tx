@@ -4,18 +4,25 @@
 ################################## Function: regression metrics #####################################
 
 calculate_metrics <- function(y, y_hat) {
+  y = as.numeric(y)
+  y_hat = as.numeric(y_hat)
+  library(caret)
   # RMSE: Root Mean Squared Error
   rmse <- sqrt(mean((y - y_hat)^2))
+  # rmse = postResample(pred = y_hat, obs = y)['RMSE']
+  
+  # % RMSE: Root Mean Squared Error
+  prmse <- rmse/mean(y) * 100
   
   # % Error: Percentage Error
   percent_error <- (sum(y_hat) - sum(y))/sum(y) * 100
   
   # R-squared (R²)
-  ss_total <- sum((y - mean(y))^2)
-  ss_residual <- sum((y - y_hat)^2)
-  r_squared <- 1 - (ss_residual / ss_total)
-  
-  return(list(rmse = rmse, percent_error = percent_error, r_squared = r_squared))
+  # ss_total <- sum((y - mean(y))^2)
+  # ss_residual <- sum((y - y_hat)^2)
+  # r_squared <- 1 - (ss_residual / ss_total)
+  r_squared = R2(pred = y_hat, obs = y)
+  return(list(rmse = rmse, percent_error = percent_error, r_squared = r_squared, prmse = prmse))
 }
 
 
@@ -61,7 +68,7 @@ annotate_stats <- function(label) {
 ### plot x y in black adding label
 plot_black = function(x, y, xlab, ylab, main, label) {
   par(bg = 'black')
-  plot(x, y,
+  plot(as.numeric(x), as.numeric(y),
        pch = 16, 
        # size = 2,
        col = 'white', # Axis label color
@@ -88,7 +95,7 @@ plot_black = function(x, y, xlab, ylab, main, label) {
   # Add x and y axes manually
   axis(1, col = "white", col.axis = "white", cex.axis = 2, font.axis = 2)
   axis(2, col = "white", col.axis = "white", cex.axis = 2, font.axis = 2)
-  abline(a = 0, b = 1, col = "yellow", lty = 2)  # Adds x = y line
+  abline(a = 0, b = 1, col = "yellow", lty = 2, lwd = 2)  # Adds x = y line
   # add text
   usr <- par("usr")
   text(x = usr[2], y = usr[3], label, 
